@@ -18,15 +18,19 @@ Simply wrap AI clients for comprehensive observability, and add a decorator to y
 ## Installation
 
 ```bash
-npm install dirigible
+npm install @dirigible-ai/sdk
 ```
 
 ## Getting Started
 
+### 0. Get your API key
+
+Sign up for a free account at [https://dirigible.ai](https://dirigible.ai) to get your API key.
+
 ### 1. Initialize the SDK
 
 ```typescript
-import { initialize } from 'dirigible';
+import { initialize } from '@dirigible-ai/sdk';
 
 initialize({
   apiKey: 'your-api-key',
@@ -42,7 +46,7 @@ See the full list of supported parameters in the **Configuration options** secti
 The simplest way to add observability is to wrap your AI clients:
 
 ```typescript
-import { observeAIClient } from 'dirigible';
+import { observeAIClient } from '@dirigible-ai/sdk';
 import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenAI } from '@google/genai';
@@ -79,7 +83,7 @@ The SDK automatically tracks entire application workflows with zero additional c
 You can add workflow metadata and log additional steps:
 
 ```typescript
-import { initialize, markWorkflowStep, endWorkflow } from 'dirigible';
+import { initialize, markWorkflowStep, endWorkflow } from '@dirigible-ai/sdk';
 
 // Initialize with optional workflow metadata
 initialize({
@@ -106,7 +110,7 @@ endWorkflow({
 Use the `@observeLLM` decorator to add metadata to specific LLM calls:
 
 ```typescript
-import { observeLLM } from 'dirigible';
+import { observeLLM } from '@dirigible-ai/sdk';
 import OpenAI from 'openai';
 
 class AIService {
@@ -130,7 +134,7 @@ class AIService {
 You can also use a function to generate dynamic metadata:
 
 ```typescript
-import { observeLLM } from 'dirigible';
+import { observeLLM } from '@dirigible-ai/sdk';
 
 class DynamicMetadataService {
   @observeLLM((params) => ({
@@ -150,7 +154,7 @@ class DynamicMetadataService {
 You can add global metadata that will be included with all requests (interactions and workflows):
 
 ```typescript
-import { setGlobalMetadata, addGlobalMetadata } from 'dirigible';
+import { setGlobalMetadata, addGlobalMetadata } from '@dirigible-ai/sdk';
 
 // Set initial global metadata
 setGlobalMetadata({
@@ -169,7 +173,7 @@ addGlobalMetadata({
 This should be automatic but when running scripts or processes that exit quickly, you can flush logs before exiting:
 
 ```typescript
-import { forceFlush } from 'dirigible';
+import { forceFlush } from '@dirigible-ai/sdk';
 
 // At the end of your script
 async function main() {
@@ -206,7 +210,7 @@ It works out of the box for other providers.
 For more control, you can manually create and manage workflows:
 
 ```typescript
-import { createWorkflow, logLLMInteraction } from 'dirigible';
+import { createWorkflow, logLLMInteraction } from '@dirigible-ai/sdk';
 
 class ChatService {
   private llmClient: any;
@@ -255,7 +259,7 @@ class ChatService {
 You can log manually when automatic instrumentation isn't suitable:
 
 ```typescript
-import { logLLMInteraction } from 'dirigible';
+import { logLLMInteraction } from '@dirigible-ai/sdk';
 
 // Log an interaction manually
 await logLLMInteraction({
@@ -273,7 +277,7 @@ await logLLMInteraction({
 The SDK includes a configurable logging system with different verbosity levels:
 
 ```typescript
-import { initialize, LogLevel } from 'dirigible';
+import { initialize, LogLevel } from '@dirigible-ai/sdk';
 
 // Configure with custom log level
 initialize({

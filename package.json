@@ -1,5 +1,5 @@
 {
-  "name": "dirigible",
+  "name": "@dirigible-ai/sdk",
   "version": "0.1.0",
   "description": "Lightweight SDK for monitoring AI and LLM workflows.",
   "main": "dist/index.js",
