@@ -1,8 +1,24 @@
 # Dirigible: AI Observability SDK
 
-A lightweight TypeScript SDK for monitoring AI and Large Language Model (LLM) workflows.
+Official JavaScript / TypeScript library for the [Dirigible AI](https://dirigible.ai) API.
+
+A lightweight SDK for monitoring AI and Large Language Model (LLM) workflows.
 
 Simply wrap AI clients for comprehensive observability, and add a decorator to your existing LLM methods for adding specific metadata.
+
+## Table of Contents
+
+- [Features](#features)
+- [Installation](#installation)
+- [Getting started](#getting-started)
+- [Global metadata](#global-metadata)
+- [Making sure logs are sent](#making-sure-logs-are-sent)
+- [Streaming](#streaming)
+- [Manual management](#manual-management)
+- [Configuring log levels](#configuring-log-levels)
+- [Configuration options](#configuration-options)
+- [Supported AI providers](#supported-ai-providers)
+- [License](#license)
 
 ## Features
 
@@ -21,7 +37,7 @@ Simply wrap AI clients for comprehensive observability, and add a decorator to y
 npm install @dirigible-ai/sdk
 ```
 
-## Getting Started
+## Getting started
 
 ### 0. Get your API key
 
@@ -29,12 +45,16 @@ Sign up for a free account at [https://dirigible.ai](https://dirigible.ai) to ge
 
 ### 1. Initialize the SDK
 
+Initialize the SDK using your Dirigible API key and project ID:
+
 ```typescript
 import { initialize } from '@dirigible-ai/sdk';
 
 initialize({
   apiKey: 'your-api-key',
   projectId: 'your-project-id',
+
+  // Optional parameters
   environment: 'production' // or 'development', 'staging', etc.
 });
 ```
@@ -43,25 +63,17 @@ See the full list of supported parameters in the **Configuration options** secti
 
 ### 2. Wrap your AI clients
 
-The simplest way to add observability is to wrap your AI clients:
+To add observability, simply wrap your AI clients using `observeAIClient`:
 
 ```typescript
 import { observeAIClient } from '@dirigible-ai/sdk';
 import OpenAI from 'openai';
-import Anthropic from '@anthropic-ai/sdk';
-import { GoogleGenAI } from '@google/genai';
 
-// Initialize and wrap your clients
+// Initialize and wrap your AI clients
 let openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 openai = observeAIClient(openai);
 
-let anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-anthropic = observeAIClient(anthropic);
-
-let gemini = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-gemini = observeAIClient(gemini);
-
-// Then use your clients normally - everything is automatically logged!
+// Then use your AI clients normally - everything is automatically logged!
 const response = await openai.chat.completions.create({
   model: 'gpt-4o',
   messages: [{ role: 'user', content: 'Hello world' }]
@@ -76,14 +88,31 @@ const openai = observeAIClient(new OpenAI({
 }));
 ```
 
-### 3. Workflow metadata
+The SDK supports OpenAI, Anthropic and Google Gemini:
+```typescript
+import { observeAIClient } from '@dirigible-ai/sdk';
+import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenAI } from '@google/genai';
 
-The SDK automatically tracks entire application workflows with zero additional code. Every LLM call is automatically associated with the current workflow.
+let openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+openai = observeAIClient(openai);
 
-You can add workflow metadata and log additional steps:
+let anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+anthropic = observeAIClient(anthropic);
+
+let gemini = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+gemini = observeAIClient(gemini);
+```
+
+### 3. Add workflow metadata
+
+The SDK automatically tracks entire application workflows. Every LLM call is automatically associated with the current workflow.
+
+You can add workflow metadata when initializing:
 
 ```typescript
-import { initialize, markWorkflowStep, endWorkflow } from '@dirigible-ai/sdk';
+import { initialize } from '@dirigible-ai/sdk';
 
 // Initialize with optional workflow metadata
 initialize({
@@ -94,18 +123,9 @@ initialize({
     userType: 'premium'
   }
 });
-
-// Mark important steps in your workflow (optional)
-markWorkflowStep('user-onboarding-start', { userId: '123' });
-
-// Optional, end the workflow when your process completes
-endWorkflow({ 
-  outcome: 'success',
-  finalState: 'user_registered'
-});
 ```
 
-### 4. Interaction metadata with the decorator
+### 4. Add interaction metadata with the decorator
 
 Use the `@observeLLM` decorator to add metadata to specific LLM calls:
 
@@ -116,7 +136,7 @@ import OpenAI from 'openai';
 class AIService {
   private openai = observeAIClient(new OpenAI({ apiKey: 'your-openai-key' }));
   
-  // Add metadata via the decorator
+  // Add the decorator just above the method calling the LLM
   @observeLLM({
     requestSource: 'web-app',
     userId: '123',
@@ -149,7 +169,9 @@ class DynamicMetadataService {
 }
 ```
 
-### 5. Global metadata
+That's it! With those 4 steps, your AI interactions and workflows are tracked and visualized in your Dirigible dashboard with the right metadata.
+
+## Global metadata
 
 You can add global metadata that will be included with all requests (interactions and workflows):
 
@@ -162,13 +184,13 @@ setGlobalMetadata({
   version: '1.2.3'
 });
 
-// Add more metadata later
+// Add more metadata later in your workflow
 addGlobalMetadata({
   deploymentRegion: 'us-west'
 });
 ```
 
-### 6. Making sure logs are sent
+## Making sure logs are sent
 
 This should be automatic but when running scripts or processes that exit quickly, you can flush logs before exiting:
 
@@ -192,14 +214,14 @@ main().catch(console.error);
 
 ## Streaming
 
-For OpenAI streaming responses, add the `stream_options` parameter to capture token usage:
+For OpenAI streaming responses, add the `stream_options` parameter to capture all usage information:
 
 ```typescript
 const stream = await openai.chat.completions.create({
   model: "gpt-4o",
   messages: [{ role: "user", content: "Your prompt" }],
   stream: true,
-  stream_options: { "include_usage": true }  // This ensures capture of OpenAI streams information
+  stream_options: { "include_usage": true }  // This ensures capture of OpenAI stream info
 });
 ```
 
@@ -210,7 +232,7 @@ It works out of the box for other providers.
 For more control, you can manually create and manage workflows:
 
 ```typescript
-import { createWorkflow, logLLMInteraction } from '@dirigible-ai/sdk';
+import { createWorkflow, logLLMInteraction, endWorkflow } from '@dirigible-ai/sdk';
 
 class ChatService {
   private llmClient: any;
@@ -250,6 +272,14 @@ class ChatService {
         });
         
         return response;
+      },
+      
+      endChat() {
+        // End the workflow when chat ends
+        endWorkflow({ 
+          outcome: 'completed',
+          finalState: 'conversation_ended'
+        });
       }
     };
   }
@@ -272,7 +302,7 @@ await logLLMInteraction({
 });
 ```
 
-## Configuring Log Levels
+## Configuring log levels
 
 The SDK includes a configurable logging system with different verbosity levels:
 
@@ -322,10 +352,10 @@ initialize({
   projectId: 'your-project-id',          // Dirigible project identifier
   
   // Optional
-  apiUrl: 'https://custom-api-url.com',  // Default is Dirigible's API
-  enabled: true,                         // Enable/disable logging globally
-  samplingRate: 0.5,                     // Log 50% of requests
+  apiUrl: 'https://custom-api-url.com',  // Default is Dirigible API
   environment: 'production',             // Environment name
+  enabled: true,                         // Enable/disable logging globally
+  samplingRate: 0.5,                     // Log a limited % of requests
   trackWorkflows: true,                  // Enable/disable automatic workflow tracking
   autoInstrument: true,                  // Enable/disable automatic client patching
   workflowMetadata: {                    // Initial metadata for workflow
