@@ -1,23 +1,23 @@
-# Dirigible: AI Observability SDK
+# Dirigible TypeScript SDK for AI Observability
 
-Official JavaScript / TypeScript library for the [Dirigible AI](https://dirigible.ai) API.
+JavaScript / TypeScript library for the [Dirigible AI](https://dirigible.ai) API.
 
 A lightweight SDK for monitoring AI and Large Language Model (LLM) workflows.
 
-Simply wrap AI clients for comprehensive observability, and add a decorator to your existing LLM methods for adding specific metadata.
+Simply wrap your AI clients and add a decorator for complete observability.
 
-## Table of Contents
+## Table of contents
 
 - [Features](#features)
 - [Installation](#installation)
 - [Getting started](#getting-started)
 - [Global metadata](#global-metadata)
-- [Making sure logs are sent](#making-sure-logs-are-sent)
 - [Streaming](#streaming)
+- [Making sure logs are sent](#making-sure-logs-are-sent)
 - [Manual management](#manual-management)
-- [Configuring log levels](#configuring-log-levels)
 - [Configuration options](#configuration-options)
 - [Supported AI providers](#supported-ai-providers)
+- [Configuring log levels](#configuring-log-levels)
 - [License](#license)
 
 ## Features
@@ -25,9 +25,8 @@ Simply wrap AI clients for comprehensive observability, and add a decorator to y
 - 🪄 **Single wrapper**: One `observeAIClient` wrapper for all AI providers
 - 🔍 **Auto-detection**: Automatically detects OpenAI, Anthropic, and Gemini models
 - 🔄 **Workflow tracking**: Automatically group related interactions into workflows
-- 🏷️ **Rich metadata**: Attach custom metadata at global, workflow, and request levels
+- 🏷️ **Rich metadata**: Attach custom metadata at global, workflow, and interaction levels
 - 📊 **Smart metrics**: Tracks token usage, latency, and other metrics automatically
-- 🧠 **Configurable sampling**: Control logging rate for high-volume applications
 - 📝 **Flexible logging**: Configurable log levels for development and production
 - 🚀 **Minimal performance impact**: Efficient batched logging with low overhead
 
@@ -88,7 +87,7 @@ const openai = observeAIClient(new OpenAI({
 }));
 ```
 
-The SDK supports OpenAI, Anthropic and Google Gemini:
+The SDK supports OpenAI, Anthropic and Google clients:
 ```typescript
 import { observeAIClient } from '@dirigible-ai/sdk';
 import OpenAI from 'openai';
@@ -190,6 +189,21 @@ addGlobalMetadata({
 });
 ```
 
+## Streaming
+
+For OpenAI streaming responses, add the `stream_options` parameter to capture all usage information:
+
+```typescript
+const stream = await openai.chat.completions.create({
+  model: "gpt-4o",
+  messages: [{ role: "user", content: "Your prompt" }],
+  stream: true,
+  stream_options: { "include_usage": true }  // This ensures capture of OpenAI stream info
+});
+```
+
+It works out of the box for other providers.
+
 ## Making sure logs are sent
 
 This should be automatic but when running scripts or processes that exit quickly, you can flush logs before exiting:
@@ -211,21 +225,6 @@ async function main() {
 
 main().catch(console.error);
 ```
-
-## Streaming
-
-For OpenAI streaming responses, add the `stream_options` parameter to capture all usage information:
-
-```typescript
-const stream = await openai.chat.completions.create({
-  model: "gpt-4o",
-  messages: [{ role: "user", content: "Your prompt" }],
-  stream: true,
-  stream_options: { "include_usage": true }  // This ensures capture of OpenAI stream info
-});
-```
-
-It works out of the box for other providers.
 
 ## Manual management
 
@@ -302,6 +301,39 @@ await logLLMInteraction({
 });
 ```
 
+## Configuration options
+
+The SDK can be configured with these options:
+
+```typescript
+initialize({
+  // Required
+  apiKey: 'your-api-key',                // Dirigible API key
+  projectId: 'your-project-id',          // Dirigible project identifier
+  
+  // Optional
+  apiUrl: 'https://custom-api-url.com',  // Default is Dirigible API
+  environment: 'production',             // Environment name
+  enabled: true,                         // Enable/disable logging globally
+  samplingRate: 0.5,                     // Log a limited % of requests
+  trackWorkflows: true,                  // Enable/disable automatic workflow tracking
+  autoInstrument: true,                  // Enable/disable automatic client patching
+  workflowMetadata: {                    // Initial metadata for workflow
+    version: '1.2.3',
+    userType: 'premium'
+  },
+  logLevel: LogLevel.INFO,               // Logging verbosity level
+  logPrefix: '[Dirigible]'               // Prefix for log messages
+});
+```
+
+## Supported AI providers
+
+- OpenAI
+- Anthropic
+- Google Gemini
+- Custom providers (with manual configuration)
+
 ## Configuring log levels
 
 The SDK includes a configurable logging system with different verbosity levels:
@@ -340,39 +372,6 @@ initialize({
     : LogLevel.DEBUG
 });
 ```
-
-## Configuration options
-
-The SDK can be configured with these options:
-
-```typescript
-initialize({
-  // Required
-  apiKey: 'your-api-key',                // Dirigible API key
-  projectId: 'your-project-id',          // Dirigible project identifier
-  
-  // Optional
-  apiUrl: 'https://custom-api-url.com',  // Default is Dirigible API
-  environment: 'production',             // Environment name
-  enabled: true,                         // Enable/disable logging globally
-  samplingRate: 0.5,                     // Log a limited % of requests
-  trackWorkflows: true,                  // Enable/disable automatic workflow tracking
-  autoInstrument: true,                  // Enable/disable automatic client patching
-  workflowMetadata: {                    // Initial metadata for workflow
-    version: '1.2.3',
-    userType: 'premium'
-  },
-  logLevel: LogLevel.INFO,               // Logging verbosity level
-  logPrefix: '[Dirigible]'               // Prefix for log messages
-});
-```
-
-## Supported AI providers
-
-- OpenAI
-- Anthropic
-- Google Gemini
-- Custom providers (with manual configuration)
 
 ## License
 
