@@ -155,16 +155,27 @@ export function observeAIClient<T>(client: T, provider?: LLMProvider): T {
     provider = detectProvider(client);
   }
   
+  // Special handling for Gemini
   if (provider === LLMProvider.GEMINI) {
-    // If the provider is Gemini, apply patching directly here
-    // This replaces the auto-instrumentation for Gemini to avoid double logging
-    try {
-      const GeminiModule = require('@google/genai');
-      if (!GeminiModule._patched) {
-        patchGemini(GeminiModule);
+    // Check if we've already tried patching Gemini
+    const globalAny = global as any;
+    if (globalAny.__dirigibleGeminiPatchAttempted !== true) {
+      // Mark that we've attempted patching to avoid repeated attempts
+      globalAny.__dirigibleGeminiPatchAttempted = true;
+      
+      // Find Gemini module in require.cache if it exists
+      if (require && require.cache) {
+        const modulePath = Object.keys(require.cache).find(path => 
+          path.includes('@google/genai') || path.includes('genai')
+        );
+        
+        if (modulePath && require.cache[modulePath]) {
+          const GeminiModule = require.cache[modulePath].exports;
+          if (GeminiModule && !GeminiModule._patched) {
+            patchGemini(GeminiModule);
+          }
+        }
       }
-    } catch (error) {
-      logger.error('Error patching Gemini module:', error);
     }
   }
   
