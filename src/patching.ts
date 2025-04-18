@@ -155,6 +155,19 @@ export function observeAIClient<T>(client: T, provider?: LLMProvider): T {
     provider = detectProvider(client);
   }
   
+  if (provider === LLMProvider.GEMINI) {
+    // If the provider is Gemini, apply patching directly here
+    // This replaces the auto-instrumentation for Gemini to avoid double logging
+    try {
+      const GeminiModule = require('@google/genai');
+      if (!GeminiModule._patched) {
+        patchGemini(GeminiModule);
+      }
+    } catch (error) {
+      logger.error('Error patching Gemini module:', error);
+    }
+  }
+  
   logger.info(`Observing ${provider} client`);
   return wrapLLMClient(client, provider);
 }
