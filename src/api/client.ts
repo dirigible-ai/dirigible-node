@@ -56,7 +56,9 @@ function transformInteraction(interaction: LLMInteraction): any {
   // Create a workflow_metadata object with workflow-specific fields and global metadata
   let workflowMetadata: Record<string, any> = {
     // Include global metadata in workflow metadata
-    ...getGlobalMetadata()
+    ...getGlobalMetadata(),
+    // Include the user-defined workflowMetadata from initialization
+    ...(getConfig().workflowMetadata || {})
   };
   
   if (interaction.metadata) {
@@ -66,8 +68,7 @@ function transformInteraction(interaction: LLMInteraction): any {
     // Fields that should be considered workflow metadata
     const workflowFields = [
       'workflowId', 'workflowType', 'workflowStartTime', 'workflowEndTime', 'createdAt',
-      'version', 'app', 'sdkVersion', 'environment', 'projectId', 'initTimestamp',
-      'restartAttempt'
+      'sdkVersion', 'environment', 'projectId', 'initTimestamp', 'restartAttempt'
     ];
     
     // Extract workflow metadata fields
