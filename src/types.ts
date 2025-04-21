@@ -79,6 +79,12 @@ export interface ObservabilityConfig {
    * @default '[Dirigible]'
    */
   logPrefix?: string;
+
+  /**
+   * Interval in milliseconds between automatic flushes of the log queue
+   * @default 1000
+   */
+  flushInterval?: number;
 }
 
 /**

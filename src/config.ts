@@ -15,7 +15,8 @@ const DEFAULT_CONFIG: ObservabilityConfig = {
   trackWorkflows: true,
   autoInstrument: true,
   logLevel: logger.LogLevel.INFO,
-  logPrefix: '[Dirigible]'
+  logPrefix: '[Dirigible]',
+  flushInterval: 1000
 };
 
 // Global configuration instance

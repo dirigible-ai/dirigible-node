@@ -8,8 +8,13 @@ import * as logger from '../logger';
 // Queue for batching requests
 let queue: LLMInteraction[] = [];
 let flushTimeout: NodeJS.Timeout | null = null;
-const FLUSH_INTERVAL = 5000; // 5 seconds
 const MAX_QUEUE_SIZE = 50;
+// Flush interval from config
+function getFlushInterval(): number {
+  const configuredInterval = getConfig().flushInterval || 1000;
+  // Minimum of 200ms to prevent excessive network activity
+  return Math.max(configuredInterval, 200);
+}
 
 /**
  * Transform interaction to match server schema
@@ -127,8 +132,9 @@ export async function logInteraction(data: LLMInteraction): Promise<void> {
   
   // Schedule flush if not already scheduled
   if (!flushTimeout) {
-    logger.trace(`Scheduling flush in ${FLUSH_INTERVAL}ms`);
-    flushTimeout = setTimeout(() => flush(), FLUSH_INTERVAL);
+    const interval = getFlushInterval();
+    logger.trace(`Scheduling flush in ${interval}ms`);
+    flushTimeout = setTimeout(() => flush(), interval);
   }
   
   // Flush immediately if queue is large enough

@@ -315,6 +315,7 @@ initialize({
   apiUrl: 'https://custom-api-url.com',  // Default is Dirigible API
   environment: 'production',             // Environment name
   enabled: true,                         // Enable/disable logging globally
+  flushInterval: 1000,                   // Flush queue every 1 second(s) (ms)
   samplingRate: 0.5,                     // Log a limited % of requests
   trackWorkflows: true,                  // Enable/disable automatic workflow tracking
   autoInstrument: true,                  // Enable/disable automatic client patching

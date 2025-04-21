@@ -1,6 +1,6 @@
 {
   "name": "@dirigible-ai/sdk",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Lightweight SDK for monitoring AI and LLM workflows.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -26,7 +26,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dirigible-ai/dirigible-node.git"
+    "url": "git+https://github.com/dirigible-ai/dirigible-sdk-typescript.git"
   },
   "homepage": "https://dirigible.ai",
   "dependencies": {
