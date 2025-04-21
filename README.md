@@ -104,11 +104,13 @@ let gemini = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 gemini = observeAIClient(gemini);
 ```
 
+With those two steps (initializing + wrapping), the application workflow and corresponding interactions are captured and logged to Dirigible.
+
+The next two steps are for adding specific metadata.
+
 ### 3. Add workflow metadata
 
-The SDK automatically tracks entire application workflows. Every LLM call is automatically associated with the current workflow.
-
-You can add workflow metadata when initializing:
+You can add workflow-specific metadata when initializing:
 
 ```typescript
 import { initialize } from '@dirigible-ai/sdk';
@@ -126,7 +128,7 @@ initialize({
 
 ### 4. Add interaction metadata with the decorator
 
-Use the `@observeLLM` decorator to add metadata to specific LLM calls:
+Use the `@observeLLM` decorator to add metadata to specific interactions:
 
 ```typescript
 import { observeLLM } from '@dirigible-ai/sdk';
@@ -137,13 +139,13 @@ class AIService {
   
   // Add the decorator just above the method calling the LLM
   @observeLLM({
-    requestSource: 'web-app',
-    userId: '123',
-    taskType: 'classification'
+    task: 'classify_input',
+    userId: userId,
+    inputId: inputId
   })
   async classifyText(text: string) {
     return this.openai.chat.completions.create({
-      model: 'gpt-4',
+      model: 'gpt-4o',
       messages: [{ role: 'user', content: text }]
     });
   }
@@ -168,26 +170,30 @@ class DynamicMetadataService {
 }
 ```
 
-That's it! With those 4 steps, your AI interactions and workflows are tracked and visualized in your Dirigible dashboard with the right metadata.
+That's it! With those four steps, your AI workflows and interactions are tracked and visualized in your Dirigible dashboard with the right metadata.
 
 ## Global metadata
 
-You can add global metadata that will be included with all requests (interactions and workflows):
+You can add global metadata that will be included with all requests:
 
 ```typescript
 import { setGlobalMetadata, addGlobalMetadata } from '@dirigible-ai/sdk';
 
 // Set initial global metadata
 setGlobalMetadata({
-  application: 'my-app',
+  deploymentRegion: 'us-west',
   version: '1.2.3'
 });
 
 // Add more metadata later in your workflow
 addGlobalMetadata({
-  deploymentRegion: 'us-west'
+  generatedId: generatedId
 });
 ```
+
+Global metadata is attached to the workflow, and to all interactions happening after its declaration.
+
+It can for example be used to add metadata that is generated during the workflow.
 
 ## Streaming
 
