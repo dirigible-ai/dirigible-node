@@ -38,6 +38,8 @@ npm install @dirigible-ai/sdk
 
 ## Getting started
 
+Follow those four simple steps to fully track your AI workflows and interactions with specific metadata.
+
 ### 0. Get your API key
 
 Sign up for a free account at [https://dirigible.ai](https://dirigible.ai) to get your API key.
@@ -106,8 +108,6 @@ gemini = observeAIClient(gemini);
 
 With those two steps (initializing + wrapping), the application workflow and corresponding interactions are captured and logged to Dirigible.
 
-The next two steps are for adding specific metadata.
-
 ### 3. Add workflow metadata
 
 You can add workflow-specific metadata when initializing:
@@ -157,20 +157,22 @@ You can also use a function to generate dynamic metadata:
 ```typescript
 import { observeLLM } from '@dirigible-ai/sdk';
 
-class DynamicMetadataService {
+class AIService {
   @observeLLM((params) => ({
     promptLength: params.messages[0].content.length,
     timestamp: new Date().toISOString(),
     userId: getCurrentUser().id
   }))
-  async generateResponse(prompt: string) {
-    // Your LLM call here
-    return this.llmClient.complete(prompt);
+  async classifyText(text: string) {
+    return this.openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [{ role: 'user', content: text }]
+    });
   }
 }
 ```
 
-That's it! With those four steps, your AI workflows and interactions are tracked and visualized in your Dirigible dashboard with the right metadata.
+That's it! With those four steps, your AI workflows and interactions are entirely tracked and visualized in your Dirigible dashboard with the right metadata.
 
 ## Global metadata
 
@@ -234,7 +236,7 @@ main().catch(console.error);
 
 ## Manual management
 
-For more control, you can manually create and manage workflows:
+For more control or when automatic instrumentation isn't suitable, you can manually create and manage workflows:
 
 ```typescript
 import { createWorkflow, logLLMInteraction, endWorkflow } from '@dirigible-ai/sdk';
@@ -254,7 +256,6 @@ class ChatService {
       startTime: new Date().toISOString()
     });
     
-    // Return chat methods
     return {
       async sendMessage(message: string) {
         // Get current workflow metadata
@@ -263,7 +264,7 @@ class ChatService {
         // Make the LLM call
         const response = await this.llmClient.generateResponse(message);
         
-        // Log the interaction with workflow metadata
+        // Log the interaction, with workflow metadata
         await logLLMInteraction({
           model: 'llm-model',
           request: { message },
@@ -280,7 +281,7 @@ class ChatService {
       },
       
       endChat() {
-        // End the workflow when chat ends
+        // Optionally, end the workflow when chat ends
         endWorkflow({ 
           outcome: 'completed',
           finalState: 'conversation_ended'
@@ -289,22 +290,6 @@ class ChatService {
     };
   }
 }
-```
-
-You can log manually when automatic instrumentation isn't suitable:
-
-```typescript
-import { logLLMInteraction } from '@dirigible-ai/sdk';
-
-// Log an interaction manually
-await logLLMInteraction({
-  model: 'custom-model',
-  request: { prompt: 'Hello, world!' },
-  response: { text: 'Hi there!' },
-  metadata: {
-    source: 'custom-integration'
-  }
-});
 ```
 
 ## Configuration options
