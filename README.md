@@ -14,6 +14,7 @@ Simply wrap your AI clients and add a decorator for complete observability.
 - [Global metadata](#global-metadata)
 - [Global metadata](#global-metadata)
 - [Artifacts](#artifacts)
+- [Streaming](#streaming)
 - [Making sure logs are sent](#making-sure-logs-are-sent)
 - [Manual management](#manual-management)
 - [Configuration options](#configuration-options)
