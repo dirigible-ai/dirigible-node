@@ -81,6 +81,9 @@ export function createWorkflow(workflowId: string, initialMetadata: Record<strin
     createdAt: new Date().toISOString(),
   };
   
+  // Array for artifacts
+  let artifacts: Array<any> = [];
+  
   return {
     /**
      * Get the workflow ID
@@ -88,6 +91,11 @@ export function createWorkflow(workflowId: string, initialMetadata: Record<strin
     get id(): string {
       return workflowId;
     },
+    
+    /**
+     * Internal property to store artifacts
+     */
+    _artifacts: artifacts,
     
     /**
      * Add metadata to this workflow
@@ -185,6 +193,53 @@ export function getWorkflow(): ReturnType<typeof createWorkflow> {
     return startWorkflow();
   }
   return activeWorkflow;
+}
+
+/**
+ * Log an artifact for the current workflow
+ * Artifacts are stored separately from workflow metadata
+ * 
+ * @param name Unique name for this artifact
+ * @param value The data to log (will be serialized as JSON)
+ * @param options Additional options (type, metadata)
+ * @returns The workflow context
+ */
+export function saveArtifact(
+  name: string, 
+  value: any, 
+  options?: { type?: string; metadata?: Record<string, any> }
+): ReturnType<typeof createWorkflow> | undefined {
+  try {
+    const workflow = getWorkflow();
+    
+    // Create artifact data
+    const artifactData = {
+      name,
+      value,
+      type: options?.type || 'default',
+      timestamp: new Date().toISOString(),
+      metadata: options?.metadata || {}
+    };
+    
+    // Store artifacts in a private property on the workflow object
+    if (!workflow._artifacts) {
+      workflow._artifacts = [artifactData];
+    } else {
+      // Update existing artifact or add new one
+      const existingIndex = workflow._artifacts.findIndex(a => a.name === name);
+      if (existingIndex >= 0) {
+        workflow._artifacts[existingIndex] = artifactData;
+      } else {
+        workflow._artifacts.push(artifactData);
+      }
+    }
+    
+    logger.debug(`Logged artifact "${name}" to workflow ${workflow.id}`);
+    return workflow;
+  } catch (error) {
+    logger.error(`Error logging artifact "${name}":`, error);
+    return undefined;
+  }
 }
 
 /**

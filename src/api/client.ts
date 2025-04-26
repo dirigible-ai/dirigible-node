@@ -4,6 +4,7 @@ import { getConfig } from '../config';
 import { LLMInteraction } from '../types';
 import { getGlobalMetadata } from '../workflow';
 import * as logger from '../logger';
+import * as workflowModule from '../workflow';
 
 // Queue for batching requests
 let queue: LLMInteraction[] = [];
@@ -91,6 +92,21 @@ function transformInteraction(interaction: LLMInteraction): any {
     });
   }
   
+  // Extract workflow artifacts if available
+  let workflow_artifacts;
+  try {
+    const currentWorkflow = workflowModule.getWorkflow();
+    
+    if (currentWorkflow && currentWorkflow._artifacts && 
+        Array.isArray(currentWorkflow._artifacts) && 
+        currentWorkflow._artifacts.length > 0) {
+      workflow_artifacts = [...currentWorkflow._artifacts];
+      logger.debug(`Including ${workflow_artifacts.length} artifacts with interaction`);
+    }
+  } catch (error) {
+    logger.trace('Error accessing workflow artifacts:', error);
+  }
+  
   logger.trace(`Transforming interaction for model: ${model}, method: ${method}`);
   
   return {
@@ -109,6 +125,7 @@ function transformInteraction(interaction: LLMInteraction): any {
     tokens_output: tokensOutput,
     tokens_total: tokensTotal,
     workflow_metadata: Object.keys(workflowMetadata).length > 0 ? workflowMetadata : undefined,
+    workflow_artifacts: workflow_artifacts,
     metadata: interaction.metadata
   };
 }

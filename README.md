@@ -12,7 +12,8 @@ Simply wrap your AI clients and add a decorator for complete observability.
 - [Installation](#installation)
 - [Getting started](#getting-started)
 - [Global metadata](#global-metadata)
-- [Streaming](#streaming)
+- [Global metadata](#global-metadata)
+- [Artifacts](#artifacts)
 - [Making sure logs are sent](#making-sure-logs-are-sent)
 - [Manual management](#manual-management)
 - [Configuration options](#configuration-options)
@@ -196,6 +197,40 @@ addGlobalMetadata({
 Global metadata is attached to the workflow, and to all interactions happening after its declaration.
 
 It can for example be used to add metadata that is generated during the workflow.
+
+## Artifacts
+
+In addition to tracking LLM interactions, you can log data artifacts in your workflows:
+
+```typescript
+import { saveArtifact } from '@dirigible-ai/sdk';
+
+// Store vector search results used for RAG, with name and value
+const searchResults = await vectorDb.search(query, { topK: 5 });
+saveArtifact('search_results', searchResults);
+
+// Optionally, log with artifact metadata and type
+saveArtifact('search_results_with_meta', searchResults, { 
+  metadata: { query, similarity_threshold: 0.8 }
+  type: 'vector_search',
+});
+```
+
+You can store any serializable data structure:
+
+```typescript
+saveArtifact('processed_results', {
+  relevant: searchResults.slice(0, 2),
+  irrelevant: searchResults.slice(2),
+  stats: {
+    totalResults: searchResults.length,
+    avgScore: searchResults.reduce((sum, r) => sum + r.score, 0) / searchResults.length,
+    executionTimeMs: 42
+  }
+});
+```
+
+Artifacts can be used to track intermediate steps in your pipelines or see what data was used for generation.
 
 ## Streaming
 

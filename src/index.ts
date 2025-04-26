@@ -9,7 +9,7 @@ export { LLMProvider, ObservabilityConfig, LLMInteraction, DecoratorInput } from
 // Decorator exports
 export { observeLLM, logLLMInteraction } from './decorator';
 
-// Workflow and metadata exports
+// Workflow, metadata and artifact exports
 export {
   setGlobalMetadata,
   addGlobalMetadata,
@@ -20,7 +20,8 @@ export {
   startWorkflow,
   endWorkflow,
   getWorkflow,
-  markWorkflowStep
+  markWorkflowStep,
+  saveArtifact
 } from './workflow';
 
 // Client observation exports
