@@ -1,4 +1,4 @@
-// Stream handling implementation for LLM observability
+// Stream handling implementation
 
 import { LLMInteraction, LLMProvider } from './types';
 import * as logger from './logger';
@@ -16,6 +16,7 @@ export class StreamHandler {
   private provider: LLMProvider;
   private request: any;
   private inputTokensFromStart: number | undefined = undefined;
+  private interactionId: string | undefined = undefined;
   
   /**
    * Create a new StreamHandler
@@ -30,7 +31,10 @@ export class StreamHandler {
     this.metadata = { ...metadata };
     this.startTime = Date.now();
     
-    logger.debug(`Created StreamHandler for ${provider} request`);
+    // Extract interaction ID from metadata if available
+    this.interactionId = metadata.interactionId;
+    
+    logger.debug(`Created StreamHandler for ${provider} request${this.interactionId ? ` with ID ${this.interactionId}` : ''}`);
   }
   
   /**
@@ -299,6 +303,7 @@ export class StreamHandler {
     const response = this.createFinalResponse();
     
     return {
+      id: this.interactionId,
       provider: this.provider,
       timestamp: new Date().toISOString(),
       duration: Date.now() - this.startTime,
@@ -411,8 +416,12 @@ export async function processStreamInBackground(
   } catch (error) {
     logger.error(`Error processing ${provider} stream in background:`, error);
     
+    // Extract the interaction ID if available
+    const interactionId = metadata.interactionId;
+    
     // Log a minimal interaction in case of error
     const interaction: LLMInteraction = {
+      id: interactionId,
       provider,
       timestamp: new Date().toISOString(),
       model: modelExtractorFn(request, null, provider),

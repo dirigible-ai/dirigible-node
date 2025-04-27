@@ -1,4 +1,4 @@
-// Main export file for the LLM observability SDK
+// Main export file for the SDK
 
 // Configuration exports
 export { initialize, getConfig, updateConfig } from './config';
@@ -8,6 +8,13 @@ export { LLMProvider, ObservabilityConfig, LLMInteraction, DecoratorInput } from
 
 // Decorator exports
 export { observeLLM, logLLMInteraction } from './decorator';
+
+// Interaction ID and workflow ID management
+export { 
+  getInteractionId, 
+  getWorkflowId, 
+  generateInteractionId 
+} from './interaction-ids';
 
 // Workflow, metadata and artifact exports
 export {

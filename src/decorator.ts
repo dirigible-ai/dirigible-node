@@ -1,9 +1,10 @@
-// Core decorator implementation for LLM observability
+// Core decorator implementation for observability
 
 import { DecoratorInput, LLMInteraction, LLMProvider } from './types';
 import { shouldLog, getConfig } from './config';
 import { logInteraction } from './api/client';
 import { getGlobalMetadata, addGlobalMetadata, removeGlobalMetadata, getWorkflow } from './workflow';
+import { generateInteractionId } from './interaction-ids';
 import * as logger from './logger';
 
 /**
@@ -229,8 +230,12 @@ export function observeLLM(input: DecoratorInput = {}) {
           
           logger.debug(`Manually logging decorated call to ${model} (${provider})`);
           
+          // Generate a unique ID for this interaction
+          const interactionId = generateInteractionId();
+          
           // Log the interaction manually
           const interaction: LLMInteraction = {
+            id: interactionId,
             provider,
             timestamp: new Date().toISOString(),
             duration: Date.now() - startTime,
@@ -280,6 +285,9 @@ export function observeLLM(input: DecoratorInput = {}) {
           const provider = detectProvider(params, this);
           const model = extractModel(params);
           
+          // Generate a unique ID for this interaction
+          const interactionId = generateInteractionId();
+          
           // Get workflow metadata if available
           let workflowMetadata = {};
           if (config.trackWorkflows !== false) {
@@ -294,6 +302,7 @@ export function observeLLM(input: DecoratorInput = {}) {
           
           // Create error interaction
           const errorInteraction: LLMInteraction = {
+            id: interactionId,
             provider,
             timestamp: new Date().toISOString(),
             model,
@@ -342,6 +351,9 @@ export function logLLMInteraction(interaction: Partial<LLMInteraction> & {
   // Auto-detect provider if not specified
   const provider = interaction.provider || detectProvider(interaction.request, null);
   
+  // Generate a unique ID for this interaction
+  const interactionId = generateInteractionId();
+  
   // Get workflow metadata if tracking is enabled
   const config = getConfig();
   let workflowMetadata = {};
@@ -357,6 +369,7 @@ export function logLLMInteraction(interaction: Partial<LLMInteraction> & {
   }
   
   const fullInteraction: LLMInteraction = {
+    id: interactionId,
     provider,
     timestamp: new Date().toISOString(),
     status: 'success',

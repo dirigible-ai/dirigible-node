@@ -110,6 +110,7 @@ function transformInteraction(interaction: LLMInteraction): any {
   logger.trace(`Transforming interaction for model: ${model}, method: ${method}`);
   
   return {
+    id: interaction.id,
     provider: provider,
     environment: interaction.metadata?.environment || getConfig().environment || 'development',
     workflow_id: workflowId,

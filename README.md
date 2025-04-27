@@ -12,6 +12,7 @@ Simply wrap your AI clients and add a decorator for complete observability.
 - [Installation](#installation)
 - [Getting started](#getting-started)
 - [Global metadata](#global-metadata)
+- [Interaction and workflow IDs](#interaction-and-workflow-ids)
 - [Artifacts](#artifacts)
 - [Streaming](#streaming)
 - [Making sure logs are sent](#making-sure-logs-are-sent)
@@ -197,6 +198,40 @@ addGlobalMetadata({
 Global metadata is attached to the workflow, and to all interactions happening after its declaration.
 
 It can for example be used to add metadata that is generated during the workflow.
+
+## Interaction and workflow IDs
+
+For better traceability and easier correlation with your own systems, both workflows and individual interactions have unique IDs that you can access:
+
+```typescript
+import { getWorkflowId, getInteractionId } from '@dirigible-ai/sdk';
+import OpenAI from 'openai';
+
+// Initialize your client
+let openai = observeAIClient(new OpenAI({ apiKey: process.env.OPENAI_API_KEY }));
+
+// Get the current workflow ID
+const workflowId = getWorkflowId();
+console.log(`Current workflow ID: ${workflowId}`);
+
+// Make an LLM API call
+const response = await openai.chat.completions.create({
+  model: 'gpt-4o',
+  messages: [{ role: 'user', content: 'Hello world' }]
+});
+
+// Get the ID of the interaction that just occurred (do it just after)
+const interactionId = getInteractionId();
+console.log(`Interaction ID: ${interactionId}`);
+```
+
+This is particularly useful for cross-system tracing and debugging complex AI workflows that span multiple services.
+
+You can also create direct links to Dirigible to easily access those logs:
+```typescript
+`https://dirigible.ai/workflows/${workflowId}`
+`https://dirigible.ai/interactions/${interactionId}`
+```
 
 ## Artifacts
 

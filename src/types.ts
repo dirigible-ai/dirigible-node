@@ -1,4 +1,4 @@
-// Core types for the LLM observability SDK
+// Core types for the SDK
 
 import { LogLevel } from './logger';
 
@@ -13,7 +13,7 @@ export enum LLMProvider {
 }
 
 /**
- * Configuration options for the LLM observability SDK
+ * Configuration options for the SDK
  */
 export interface ObservabilityConfig {
   /**
@@ -91,6 +91,11 @@ export interface ObservabilityConfig {
  * Base interface for LLM interaction data
  */
 export interface LLMInteraction {
+  /**
+   * Unique identifier for this interaction
+   */
+  id?: string;
+  
   /**
    * LLM provider (OpenAI, Anthropic, etc.)
    */

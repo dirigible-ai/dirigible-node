@@ -1,4 +1,4 @@
-// Logger implementation for the Dirigible SDK
+// Logger implementation for the SDK
 
 /**
  * Log levels in order of increasing verbosity

@@ -1,8 +1,9 @@
-// Core library patching implementation for automatic LLM observability
+// Core library patching implementation for automatic observability
 
 import { LLMInteraction, LLMProvider } from './types';
 import { logInteraction } from './api/client';
 import { getGlobalMetadata, getWorkflow } from './workflow';
+import { generateInteractionId } from './interaction-ids';
 import * as logger from './logger';
 import { createStreamWrapper, processStreamInBackground } from './stream-handler';
 
@@ -276,6 +277,9 @@ function wrapLLMClient(client: any, provider: LLMProvider, basePath: string = ''
             if (result instanceof Promise) {
               return result.then(
                 (response) => {
+                  // Generate a unique ID for this interaction
+                  const interactionId = generateInteractionId();
+                  
                   // Special handling for OpenAI streaming with stream=true parameter
                   if (provider === LLMProvider.OPENAI && reqData.stream === true) {
                     logger.debug('OpenAI streaming request detected');
@@ -293,7 +297,10 @@ function wrapLLMClient(client: any, provider: LLMProvider, basePath: string = ''
                           provider,
                           loggingStream,
                           reqData,
-                          metadata,
+                          {
+                            ...metadata,
+                            interactionId
+                          },
                           logInteraction,
                           extractModel
                         ).catch(err => logger.error('Error in background processing:', err));
@@ -305,6 +312,7 @@ function wrapLLMClient(client: any, provider: LLMProvider, basePath: string = ''
                         
                         // Log a basic interaction and return the original stream
                         const interaction: LLMInteraction = {
+                          id: interactionId,
                           provider,
                           timestamp: new Date().toISOString(),
                           model: extractModel(reqData, null, provider),
@@ -332,6 +340,7 @@ function wrapLLMClient(client: any, provider: LLMProvider, basePath: string = ''
                       logger.debug('OpenAI streaming request without tee method, logging basic info');
                       
                       const interaction: LLMInteraction = {
+                        id: interactionId,
                         provider,
                         timestamp: new Date().toISOString(),
                         model: extractModel(reqData, null, provider),
@@ -362,7 +371,10 @@ function wrapLLMClient(client: any, provider: LLMProvider, basePath: string = ''
                       provider,
                       response,
                       reqData,
-                      metadata,
+                      {
+                        ...metadata,
+                        interactionId
+                      },
                       logInteraction,
                       extractModel
                     );
@@ -371,6 +383,7 @@ function wrapLLMClient(client: any, provider: LLMProvider, basePath: string = ''
                   // Handle regular non-streaming responses
                   logger.debug(`Successful response from ${currentPath}`);
                   const interaction: LLMInteraction = {
+                    id: interactionId,
                     provider,
                     timestamp: new Date().toISOString(),
                     duration: Date.now() - startTime,
@@ -386,9 +399,13 @@ function wrapLLMClient(client: any, provider: LLMProvider, basePath: string = ''
                   return response;
                 },
                 (error: unknown) => {
+                  // Generate a unique ID for this error interaction
+                  const interactionId = generateInteractionId();
+                  
                   // Log error
                   logger.warn(`Error response from ${currentPath}:`, error);
                   const interaction: LLMInteraction = {
+                    id: interactionId,
                     provider,
                     timestamp: new Date().toISOString(),
                     duration: Date.now() - startTime,
@@ -405,9 +422,13 @@ function wrapLLMClient(client: any, provider: LLMProvider, basePath: string = ''
                 }
               );
             } else {
+              // Generate a unique ID for this synchronous interaction
+              const interactionId = generateInteractionId();
+              
               // Handle synchronous results
               logger.debug(`Synchronous result from ${currentPath}`);
               const interaction: LLMInteraction = {
+                id: interactionId,
                 provider,
                 timestamp: new Date().toISOString(),
                 duration: Date.now() - startTime,
@@ -423,9 +444,13 @@ function wrapLLMClient(client: any, provider: LLMProvider, basePath: string = ''
               return result;
             }
           } catch (error: unknown) {
+            // Generate a unique ID for this synchronous error
+            const interactionId = generateInteractionId();
+            
             // Handle synchronous errors
             logger.warn(`Synchronous error in ${currentPath}:`, error);
             const interaction: LLMInteraction = {
+              id: interactionId,
               provider,
               timestamp: new Date().toISOString(),
               duration: Date.now() - startTime,

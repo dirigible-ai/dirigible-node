@@ -1,4 +1,4 @@
-// Workflow management for LLM requests
+// Workflow management
 
 import * as logger from './logger';
 
