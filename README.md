@@ -28,9 +28,9 @@ Simply wrap your AI clients and add a decorator for complete observability.
 - 🔍 **Auto-detection**: Automatically detects OpenAI, Anthropic, and Gemini models
 - 🔄 **Workflow tracking**: Automatically group related interactions into workflows
 - 🏷️ **Rich metadata**: Attach custom metadata at global, workflow, and interaction levels
-- 📊 **Smart metrics**: Tracks token usage, latency, and other metrics automatically
-- 📝 **Flexible logging**: Configurable log levels for development and production
-- 🚀 **Minimal performance impact**: Efficient batched logging with low overhead
+- 💎 **Data artifacts**: In addition to LLM interactions, store intermediary data artifacts
+- 📈 **Smart metrics**: Tracks token usage, latency, and other metrics automatically
+- ⚡ **Minimal performance impact**: Efficient batched logging with low overhead
 
 ## Installation
 
