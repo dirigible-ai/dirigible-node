@@ -30,7 +30,7 @@ Simply wrap your AI clients and add a decorator for complete observability.
 - 🏷️ **Rich metadata**: Attach custom metadata at global, workflow, and interaction levels
 - 💎 **Data artifacts**: In addition to LLM interactions, store intermediary data artifacts
 - 📈 **Smart metrics**: Tracks token usage, latency, and other metrics automatically
-- ⚡ **Minimal performance impact**: Efficient batched logging with low overhead
+- ⚡ **Fast and reliable**: Efficient batched logging with production-grade reliability across architectural patterns
 
 ## Installation
 
@@ -62,6 +62,8 @@ initialize({
 });
 ```
 
+The initialization creates a workflow context that's automatically shared across all wrapped clients in your application.
+
 See the full list of supported parameters in the **Configuration options** section.
 
 ### 2. Wrap your AI clients
@@ -90,6 +92,8 @@ const openai = observeAIClient(new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 }));
 ```
+
+The wrapper works reliably regardless of where clients are initialized, including in factory patterns, service classes, or multiple files.
 
 The SDK supports OpenAI, Anthropic and Google clients:
 ```typescript
@@ -284,7 +288,7 @@ It works out of the box for other providers.
 
 ## Making sure logs are sent
 
-This should be automatic but when running scripts or processes that exit quickly, you can flush logs before exiting:
+This should be automatic, but when running scripts or processes that exit quickly, you can force a flush:
 
 ```typescript
 import { forceFlush } from '@dirigible-ai/sdk';
