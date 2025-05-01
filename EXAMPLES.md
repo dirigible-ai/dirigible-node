@@ -4,17 +4,17 @@ This page contains practical examples of how to use the Dirigible SDK to monitor
 
 ## Table of Contents
 
-- [Simple workflow example](#simple-workflow-example)
+- [Simple workflow](#simple-workflow)
   - [1. Import the SDK functions](#1-import-the-sdk-functions)
   - [2. Initialize the SDK](#2-initialize-the-sdk)
   - [3. Wrap OpenAI client](#3-wrap-openai-client)
   - [4. LLM calls and interaction metadata](#4-llm-calls-and-interaction-metadata)
   - [5. Run the workflow](#5-run-the-workflow)
   - [Visualize on Dirigible](#visualize-on-dirigible)
-- [Advanced workflow example](#advanced-workflow-example)
+- [Advanced RAG workflow](#advanced-rag-workflow)
   - [1. Import advanced SDK functions](#1-import-advanced-sdk-functions)
   - [2. Initialize SDK and wrap multiple AI clients](#2-initialize-sdk-and-wrap-multiple-ai-clients)
-  - [3. Create services with function calling for search terms](#3-create-services-with-function-calling-for-search-terms)
+  - [3. Create LLM and vector search services](#3-create-llm-and-vector-search-services)
   - [4. Run the complete RAG workflow](#4-run-the-complete-rag-workflow)
   - [Visualization on Dirigible](#visualization-on-dirigible)
 
