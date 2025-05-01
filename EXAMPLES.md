@@ -18,7 +18,7 @@ This page contains practical examples of how to use the Dirigible SDK to monitor
   - [4. Run the complete RAG workflow](#4-run-the-complete-rag-workflow)
   - [Visualization on Dirigible](#visualization-on-dirigible)
 
-## Simple workflow example
+## Simple workflow
 
 This example shows how to monitor a basic customer support workflow that uses OpenAI to classify customer intents and generate responses. We'll demonstrate how to initialize the SDK, wrap an AI client, and add metadata to specific interactions.
 
@@ -62,7 +62,7 @@ const openai = observeAIClient(new OpenAI({
 
 ### 4. LLM calls and interaction metadata
 
-We create a support agent class with two methods for different tasks. The `@observeLLM` decorator adds specific metadata to each interaction, making it easier to understand their purpose and filter them in the dashboard.
+We create a support agent class with two methods for different tasks: classifying the request intent and generating the response. The `@observeLLM` decorator adds specific metadata to each interaction, making it easier to understand their purpose and filter them in the dashboard.
 
 ```typescript
 class SupportAgent {
@@ -129,7 +129,7 @@ You can now find your workflow and interactions on Dirigible:
 
 ![Simple example visualization - Feed](images/simple-1-dark.png)
 
-Inspect and exploit individual elements:
+Inspect and exploit individual interactions:
 
 ![Simple example visualization - Interaction details](images/simple-2-dark.png)
 
@@ -137,7 +137,7 @@ Visualize the workflow:
 
 ![Simple example visualization - Workflow details](images/simple-3-dark.png)
 
-## Advanced workflow example
+## Advanced RAG workflow
 
 This example demonstrates a complete Retrieval-Augmented Generation (RAG) system that uses multiple AI providers and additional Dirigible features. We'll show how to save artifacts, add global metadata, and track workflow/interaction IDs across a multi-step process.
 
@@ -201,7 +201,7 @@ addGlobalMetadata({
 });
 ```
 
-### 3. Create services with function calling for search terms
+### 3. Create LLM and vector search services
 
 We create service classes for our LLM operations. The SearchService uses function calling to get structured search terms, showing how to combine observability with tools. Each decorated method with `@observeLLM` adds specific metadata to the interaction.
 
@@ -233,7 +233,7 @@ const searchTermsTools: ChatCompletionTool[] = [{
   }
 }];
 
-// Search service using function calling for structured output
+// Search service using function calling
 class SearchService {
   @observeLLM({
     task: 'extract_search_terms',
@@ -403,6 +403,6 @@ Visualize interactions and artifacts with the interactive canvas:
 
 ![Advanced example visualization - Metadata details](images/advanced-2-dark.png)
 
-Inspect and exploit individual elements:
+Inspect and exploit individual interactions and artifacts:
 
 ![Advanced example visualization - Performance metrics](images/advanced-3-dark.png)
