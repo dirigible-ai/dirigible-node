@@ -6,6 +6,8 @@ A lightweight SDK for monitoring AI and Large Language Model (LLM) workflows.
 
 Simply wrap your AI clients and add a decorator for complete observability.
 
+Refer to [Examples](https://github.com/dirigible-ai/dirigible-sdk-typescript/blob/main/README.md) to see practical examples.
+
 ## Table of contents
 
 - [Features](#features)
