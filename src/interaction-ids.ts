@@ -1,7 +1,7 @@
 // ID management
 
 import * as logger from './logger';
-import { getWorkflow } from './workflow';
+import { getCurrentWorkflow } from './workflow';
 
 // Store the most recent interaction ID
 let lastInteractionId: string | null = null;
@@ -30,7 +30,7 @@ export function getInteractionId(): string | null {
  */
 export function getWorkflowId(): string | null {
   try {
-    const workflow = getWorkflow();
+    const workflow = getCurrentWorkflow();
     return workflow.id;
   } catch (error) {
     logger.warn('Failed to get workflow ID:', error);

@@ -23,7 +23,7 @@ export interface ObservabilityConfig {
   
   /**
    * Base URL for the observability service API
-   * @default 'https://api.yourobservability.com'
+   * @default 'https://api.dirigible.ai'
    */
   apiUrl?: string;
   
@@ -55,7 +55,7 @@ export interface ObservabilityConfig {
    * Whether to automatically track workflows
    * @default true
    */
-  trackWorkflows?: boolean;
+  workflowTracking?: boolean;
   
   /**
    * Whether to automatically instrument LLM libraries
@@ -155,3 +155,237 @@ export interface LLMInteraction {
  * Type for decorator options or function that returns metadata
  */
 export type DecoratorInput = Record<string, any> | ((params: any) => Record<string, any>);
+
+
+// Types for data retrieval API
+
+/**
+ * AI Workflow data structure (camelCase)
+ */
+export interface AIWorkflow {
+  workflowId: string;
+  projectId: string;
+  environment: string;
+  workflowType: string;
+  startedAt: string;
+  lastUpdated: string;
+  metadata: Record<string, any>;
+  totalInteractions: number;
+  errorCount: number;
+  totalTokens: number;
+  totalDurationMs: number;
+  firstInteraction: string;
+  lastInteraction: string;
+}
+
+/**
+ * Artifact data structure (camelCase)
+ */
+export interface Artifact {
+  id: string;
+  workflowId: string;
+  projectId: string;
+  name: string;
+  type: string;
+  value: any;
+  metadata: Record<string, any>;
+  timestamp: string;
+  createdAt: string;
+}
+
+/**
+ * Pagination parameters using cursor-based pagination
+ */
+export interface PaginationParams {
+  limit?: number;
+  cursor?: string;
+}
+
+/**
+ * Interaction filter options (camelCase)
+ */
+export interface InteractionFilter {
+  environment?: string;
+  provider?: string;
+  model?: string;
+  status?: string;
+  startDate?: string;
+  endDate?: string;
+  interactionId?: string;
+  metadata?: string; // JSON string
+  toolName?: string;
+}
+
+/**
+ * Workflow filter options (camelCase)
+ */
+export interface WorkflowFilter {
+  environment?: string;
+  workflowType?: string;
+  startDate?: string;
+  endDate?: string;
+  metadata?: string; // JSON string
+  status?: string; // Support status:error filtering
+}
+
+/**
+ * Standard API response metadata
+ */
+export interface ResponseMetadata {
+  /**
+   * Timestamp of when the response was generated
+   */
+  timestamp: string;
+  
+  /**
+   * Additional metadata properties
+   */
+  [key: string]: any;
+}
+
+/**
+ * Pagination metadata for collections
+ */
+export interface PaginationMetadata {
+  /**
+   * Total number of items available
+   */
+  total: number;
+  
+  /**
+   * Number of items per page
+   */
+  limit: number;
+  
+  /**
+   * Cursor for the next page of results
+   */
+  nextCursor?: string;
+  
+  /**
+   * Whether there are more results available
+   */
+  hasMore: boolean;
+}
+
+/**
+ * Standard API response wrapper for single resources
+ */
+export interface ApiResponse<T> {
+  /**
+   * The resource data
+   */
+  data: T;
+  
+  /**
+   * Metadata about the response
+   */
+  meta: ResponseMetadata;
+}
+
+/**
+ * Standard API response wrapper for collections
+ */
+export interface ApiCollectionResponse<T> {
+  /**
+   * The collection of resources
+   */
+  data: T[];
+  
+  /**
+   * Metadata about the response, including pagination info
+   */
+  meta: ResponseMetadata & {
+    pagination: PaginationMetadata;
+  };
+}
+
+/**
+ * Standard API response wrapper for relationships
+ */
+export interface ApiRelationshipResponse<T, R> {
+  /**
+   * The relationship data
+   */
+  data: T & R;
+  
+  /**
+   * Metadata about the response
+   */
+  meta: ResponseMetadata;
+}
+
+/**
+ * Standard API error response
+ */
+export interface ApiErrorResponse {
+  /**
+   * Error details
+   */
+  error: {
+    /**
+     * Error code
+     */
+    code: string;
+    
+    /**
+     * Human-readable error message
+     */
+    message: string;
+    
+    /**
+     * Additional error details
+     */
+    details?: any;
+  };
+  
+  /**
+   * Metadata about the error response
+   */
+  meta: ResponseMetadata;
+}
+
+/**
+ * Options for data retrieval methods
+ */
+export interface DataRetrievalOptions {
+  /**
+   * Include Markdown formatted version in the response
+   */
+  includeMarkdown?: boolean;
+  
+  /**
+   * Include JSON formatted version in the response
+   */
+  includeJson?: boolean;
+}
+
+/**
+ * Extended response for interaction with export formats
+ */
+export interface InteractionResponseWithExports extends ApiResponse<LLMInteraction> {
+  /**
+   * Markdown formatted version of the interaction
+   */
+  markdown?: string;
+  
+  /**
+   * JSON formatted version of the interaction
+   */
+  json?: string;
+}
+
+/**
+ * Extended response for workflow interactions with export formats
+ */
+export interface WorkflowInteractionsResponseWithExports extends ApiRelationshipResponse<{workflow: AIWorkflow | null}, {interactions: LLMInteraction[]}> {
+  /**
+   * Markdown formatted version of the workflow with interactions
+   */
+  markdown?: string;
+  
+  /**
+   * JSON formatted version of the workflow with interactions
+   */
+  json?: string;
+}

@@ -187,7 +187,7 @@ export function endWorkflow(metadata: Record<string, any> = {}): void {
  * Get the current workflow context (or create one if none exists)
  * @returns The current workflow context
  */
-export function getWorkflow(): ReturnType<typeof createWorkflow> {
+export function getCurrentWorkflow(): ReturnType<typeof createWorkflow> {
   if (!activeWorkflow) {
     logger.debug('No active workflow, creating one automatically');
     return startWorkflow();
@@ -210,7 +210,7 @@ export function saveArtifact(
   options?: { type?: string; metadata?: Record<string, any> }
 ): ReturnType<typeof createWorkflow> | undefined {
   try {
-    const workflow = getWorkflow();
+    const workflow = getCurrentWorkflow();
     
     // Create artifact data
     const artifactData = {
@@ -249,7 +249,7 @@ export function saveArtifact(
  * @returns The workflow context
  */
 export function markWorkflowStep(stepName: string, metadata: Record<string, any> = {}): ReturnType<typeof createWorkflow> {
-  const workflow = getWorkflow();
+  const workflow = getCurrentWorkflow();
   logger.debug(`Marking workflow step: ${stepName}`);
   
   workflow.addMetadata({

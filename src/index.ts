@@ -1,20 +1,31 @@
-// Main export file for the SDK
+/**
+ * Main export file for the Dirigible SDK
+ * 
+ * This file exports both the Dirigible namespace and individual exports.
+ */
 
+// Import Dirigible class
+import { Dirigible as DirigibleClass } from './dirigible';
+export { observeAIClient, observeLLM } from './dirigible';
+export { LLMProvider } from './types';
+
+// Export Dirigible as both default and named export
+export const Dirigible = DirigibleClass;
+// Support import Dirigible from '@dirigible-ai/sdk'
+export default DirigibleClass;
+
+// Re-export everything individually for backward compatibility
 // Configuration exports
 export { initialize, getConfig, updateConfig } from './config';
 
 // Type exports
-export { LLMProvider, ObservabilityConfig, LLMInteraction, DecoratorInput } from './types';
+export { ObservabilityConfig, LLMInteraction, DecoratorInput } from './types';
 
 // Decorator exports
-export { observeLLM, logLLMInteraction } from './decorator';
+export { logLLMInteraction } from './decorator';
 
 // Interaction ID and workflow ID management
-export { 
-  getInteractionId, 
-  getWorkflowId, 
-  generateInteractionId 
-} from './interaction-ids';
+export { getInteractionId, getWorkflowId, generateInteractionId } from './interaction-ids';
 
 // Workflow, metadata and artifact exports
 export {
@@ -26,13 +37,10 @@ export {
   createWorkflow,
   startWorkflow,
   endWorkflow,
-  getWorkflow,
+  getCurrentWorkflow,
   markWorkflowStep,
   saveArtifact
 } from './workflow';
-
-// Client observation exports
-export { observeAIClient } from './patching';
 
 // Manual patching export (for advanced use cases)
 export { patchLLMLibraries, patchIfExists } from './patching';
@@ -42,3 +50,16 @@ export { forceFlush } from './api/client';
 
 // Logger exports
 export { LogLevel, configureLogger } from './logger';
+
+// Data access API exports
+export {
+  getInteraction,
+  getInteractions,
+  getWorkflow,
+  getWorkflows,
+  getWorkflowInteractions,
+  getWorkflowArtifacts,
+  getArtifact,
+  searchInteractions,
+  searchWorkflows
+} from './api/data-retrieval';

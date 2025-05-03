@@ -12,7 +12,7 @@ const DEFAULT_CONFIG: ObservabilityConfig = {
   enabled: true,
   samplingRate: 1,
   environment: 'development',
-  trackWorkflows: true,
+  workflowTracking: true,
   autoInstrument: true,
   logLevel: logger.LogLevel.INFO,
   logPrefix: '[Dirigible]',
@@ -50,7 +50,7 @@ export function initialize(config: Partial<ObservabilityConfig>): ObservabilityC
   }
   
   // Start a workflow synchronously unless explicitly disabled
-  if (globalConfig.trackWorkflows !== false) {
+  if (globalConfig.workflowTracking !== false) {
     try {
       logger.debug('Starting automatic workflow tracking');
       startWorkflow({

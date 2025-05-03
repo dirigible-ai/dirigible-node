@@ -95,7 +95,7 @@ function transformInteraction(interaction: LLMInteraction): any {
   // Extract workflow artifacts if available
   let workflow_artifacts;
   try {
-    const currentWorkflow = workflowModule.getWorkflow();
+    const currentWorkflow = workflowModule.getCurrentWorkflow();
     
     if (currentWorkflow && currentWorkflow._artifacts && 
         Array.isArray(currentWorkflow._artifacts) && 

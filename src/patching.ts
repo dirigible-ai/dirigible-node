@@ -2,7 +2,7 @@
 
 import { LLMInteraction, LLMProvider } from './types';
 import { logInteraction } from './api/client';
-import { getGlobalMetadata, getWorkflow } from './workflow';
+import { getGlobalMetadata, getCurrentWorkflow } from './workflow';
 import { generateInteractionId } from './interaction-ids';
 import * as logger from './logger';
 import { createStreamWrapper, processStreamInBackground } from './stream-handler';
@@ -262,7 +262,7 @@ function wrapLLMClient(client: any, provider: LLMProvider, basePath: string = ''
           
           // Get current workflow metadata if available
           try {
-            const workflow = getWorkflow();
+            const workflow = getCurrentWorkflow();
             Object.assign(metadata, workflow.getMetadata());
           } catch (error) {
             // Ignore errors in workflow handling

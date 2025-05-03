@@ -5,30 +5,34 @@ This page contains practical examples of how to use the Dirigible SDK to monitor
 ## Table of Contents
 
 - [Simple workflow](#simple-workflow)
-  - [1. Import the SDK functions](#1-import-the-sdk-functions)
+  - [1. Import the SDK](#1-import-the-sdk)
   - [2. Initialize the SDK](#2-initialize-the-sdk)
   - [3. Wrap OpenAI client](#3-wrap-openai-client)
   - [4. LLM calls and interaction metadata](#4-llm-calls-and-interaction-metadata)
   - [5. Run the workflow](#5-run-the-workflow)
   - [Visualize on Dirigible](#visualize-on-dirigible)
 - [Advanced RAG workflow](#advanced-rag-workflow)
-  - [1. Import advanced SDK functions](#1-import-advanced-sdk-functions)
+  - [1. Import the SDK](#1-import-the-sdk-1)
   - [2. Initialize SDK and wrap multiple AI clients](#2-initialize-sdk-and-wrap-multiple-ai-clients)
   - [3. Create LLM and vector search services](#3-create-llm-and-vector-search-services)
   - [4. Run the complete RAG workflow](#4-run-the-complete-rag-workflow)
   - [Visualization on Dirigible](#visualization-on-dirigible)
+- [Data retrieval](#data-retrieval)
+  - [Getting data for in-context learning](#getting-data-for-in-context-learning)
+  - [Preparing data for finetuning](#preparing-data-for-finetuning)
+  - [Exporting data for analysis](#exporting-data-for-analysis)
 
 ## Simple workflow
 
 This example shows how to monitor a basic customer support workflow that uses OpenAI to classify customer intents and generate responses. We'll demonstrate how to initialize the SDK, wrap an AI client, and add metadata to specific interactions.
 
-### 1. Import the SDK functions
+### 1. Import the SDK
 
-First, we import the three key Dirigible functions: `initialize` for SDK setup, `observeAIClient` for wrapping AI provider clients, and `observeLLM` for adding metadata to specific interactions.
+First, we import Dirigible and the necessary decorator functions. We use the direct imports for the special functions and the namespace for everything else.
 
 ```typescript
 import * as dotenv from 'dotenv';
-import { initialize, observeAIClient, observeLLM } from '@dirigible-ai/sdk';
+import Dirigible, { observeAIClient, observeLLM } from '@dirigible-ai/sdk';
 import OpenAI from 'openai';
 
 // Load environment variables
@@ -40,7 +44,7 @@ dotenv.config();
 Now we initialize the SDK with our API credentials and add workflow metadata that will be attached to all interactions in this workflow. This helps search and organize your data in the Dirigible dashboard.
 
 ```typescript
-initialize({
+Dirigible.initialize({
   apiKey: process.env.DIRIGIBLE_API_KEY,
   projectId: process.env.DIRIGIBLE_PROJECT_ID,
   workflowMetadata: {
@@ -112,6 +116,10 @@ async function handleCustomerMessage(message: string) {
   const responseResult = await agent.generateResponse(message, intent);
   const response = responseResult.choices[0].message.content || "Sorry, I couldn't generate a response.";
   
+  // Log workflow ID for traceability
+  const workflowId = Dirigible.getWorkflowId();
+  console.log(`View workflow: https://dirigible.ai/workflows/${workflowId}`);
+  
   return { intent, response };
 }
 
@@ -141,21 +149,13 @@ Visualize the workflow:
 
 This example demonstrates a complete Retrieval-Augmented Generation (RAG) system that uses multiple AI providers and additional Dirigible features. We'll show how to save artifacts, add global metadata, and track workflow/interaction IDs across a multi-step process.
 
-### 1. Import advanced SDK functions
+### 1. Import the SDK
 
-In addition to the basic functions, we import more advanced features: `saveArtifact` for storing intermediary data, `addGlobalMetadata` for adding context during execution, and `getWorkflowId`/`getInteractionId` for cross-system tracing.
+We import Dirigible for the namespace and directly import the special functions we'll use frequently.
 
 ```typescript
 import * as dotenv from 'dotenv';
-import { 
-  initialize, 
-  observeAIClient, 
-  observeLLM, 
-  saveArtifact,
-  addGlobalMetadata,
-  getWorkflowId,
-  getInteractionId
-} from '@dirigible-ai/sdk';
+import Dirigible, { observeAIClient, observeLLM } from '@dirigible-ai/sdk';
 import OpenAI from 'openai';
 import { type ChatCompletionTool } from "openai/resources/chat/completions";
 import Anthropic from '@anthropic-ai/sdk';
@@ -171,7 +171,7 @@ We initialize the SDK, wrap clients from both OpenAI and Anthropic, get the work
 
 ```typescript
 // Initialize the SDK
-initialize({
+Dirigible.initialize({
   apiKey: process.env.DIRIGIBLE_API_KEY,
   projectId: process.env.DIRIGIBLE_PROJECT_ID,
   environment: 'production',
@@ -191,14 +191,8 @@ const anthropic = observeAIClient(new Anthropic({
 }));
 
 // Get workflow ID for tracing
-const workflowId = getWorkflowId();
+const workflowId = Dirigible.getWorkflowId();
 console.log(`Workflow ID: ${workflowId}`);
-
-// Add global metadata
-addGlobalMetadata({
-  userId: 'user-123',
-  timestamp: new Date().toISOString()
-});
 ```
 
 ### 3. Create LLM and vector search services
@@ -232,7 +226,11 @@ const searchTermsTools: ChatCompletionTool[] = [{
     }
   }
 }];
+```
 
+Dirigible seamlessly integrates with structured tools like OpenAI's function calling while providing complete observability.
+
+```typescript
 // Search service using function calling
 class SearchService {
   @observeLLM({
@@ -251,7 +249,7 @@ class SearchService {
     });
     
     // Get interaction ID for this specific call
-    const interactionId = getInteractionId();
+    const interactionId = Dirigible.getInteractionId();
     console.log(`Search terms interaction ID: ${interactionId}`);
     
     // Extract the structured search terms from the function call
@@ -268,7 +266,7 @@ class SearchService {
     }
     
     // Store the justification as an artifact
-    saveArtifact('search_terms_justification', { 
+    Dirigible.saveArtifact('search_terms_justification', { 
       query, 
       terms, 
       justification 
@@ -277,7 +275,11 @@ class SearchService {
     return terms;
   }
 }
+```
 
+The `@observeLLM` decorator enriches interactions with metadata, while the artifacts feature captures intermediate reasoning for full transparency.
+
+```typescript
 // Document service for retrieval operations
 class DocumentService {
   async retrieveDocuments(query: string, searchTerms: string[]) {
@@ -285,7 +287,7 @@ class DocumentService {
     const results = await searchVectorDatabase(searchTerms.join(' OR '));
     
     // Store search results as an artifact
-    saveArtifact('search_results', results, {
+    Dirigible.saveArtifact('search_results', results, {
       metadata: { 
         query, 
         searchTerms, 
@@ -308,7 +310,11 @@ class DocumentService {
     return documents;
   }
 }
+```
 
+With Dirigible's artifacts, you can monitor non-LLM operations like vector search, gaining visibility into the entire retrieval process.
+
+```typescript
 // Answer service for generating responses with Claude
 class AnswerService {
   @observeLLM({
@@ -334,7 +340,7 @@ class AnswerService {
     });
     
     // Get interaction ID
-    const interactionId = getInteractionId();
+    const interactionId = Dirigible.getInteractionId();
     console.log(`Answer generation interaction ID: ${interactionId}`);
     
     // Extract the answer from Claude's response
@@ -348,12 +354,14 @@ class AnswerService {
     }
     
     // Save the final answer as an artifact
-    saveArtifact('final_answer', { query, answer });
+    Dirigible.saveArtifact('final_answer', { query, answer });
     
     return answer;
   }
 }
 ```
+
+Dirigible's auto-detection enables seamless tracking across different AI providers like OpenAI and Anthropic in the same workflow. This gives you complete visibility into your RAG pipeline from start to finish.
 
 ### 4. Run the complete RAG workflow
 
@@ -387,7 +395,7 @@ answerQuestion("How do I implement RAG with the Dirigible SDK?")
   .then(answer => {
     console.log("\nFINAL ANSWER:");
     console.log(answer);
-    console.log(`\nView workflow: https://dirigible.ai/workflows/${workflowId}`);
+    console.log(`\nView workflow: https://dirigible.ai/workflows/${Dirigible.getWorkflowId()}`);
   });
 ```
 
@@ -406,3 +414,153 @@ Visualize interactions and artifacts with the interactive canvas:
 Inspect and exploit individual interactions and artifacts:
 
 ![Advanced example visualization - Performance metrics](images/advanced-3-dark.png)
+
+## Data retrieval
+
+### Retrieving data for in-context learning
+
+Use your historical interactions to enhance your prompts with relevant examples:
+
+```typescript
+import Dirigible from '@dirigible-ai/sdk';
+
+// Initialize for data retrieval
+Dirigible.initialize({
+  apiKey: process.env.DIRIGIBLE_API_KEY,
+  projectId: process.env.DIRIGIBLE_PROJECT_ID,
+  environment: 'production'
+});
+
+async function getContextExamples(query, n = 3) {
+  // Find similar successful interactions
+  const similar = await Dirigible.searchInteractions({
+    query: query,
+    filters: { status: 'success' },
+    limit: n
+  });
+  
+  // Format as examples for prompt enhancement
+  return similar.interactions.map(int => ({
+    question: int.request.messages?.[0]?.content || '',
+    answer: int.response.choices?.[0]?.message?.content || ''
+  }));
+}
+
+// Usage
+const examples = await getContextExamples("How do I implement an agent?");
+const enhancedPrompt = [
+  { role: 'system', content: 'Answer leveraging these examples:' },
+  ...examples.flatMap(ex => [
+    { role: 'user', content: ex.question },
+    { role: 'assistant', content: ex.answer }
+  ]),
+  { role: 'user', content: currentUserQuestion }
+];
+```
+
+### Preparing data for finetuning
+
+Create high-quality training datasets from your production interactions:
+
+```typescript
+import Dirigible from '@dirigible-ai/sdk';
+import fs from 'fs';
+
+// Initialize for data retrieval
+Dirigible.initialize({
+  apiKey: process.env.DIRIGIBLE_API_KEY,
+  projectId: process.env.DIRIGIBLE_PROJECT_ID,
+  workflowTracking: false  // disable tracking in analytics mode
+});
+
+async function createFinetuningData(options = {}) {
+  const { minQuality = 0.8, maxCount = 1000 } = options;
+  
+  // Get successful interactions with high quality scores
+  const interactions = await Dirigible.getInteractions({
+    filters: {
+      status: 'success',
+      metadata: JSON.stringify({ quality_score: { $gte: minQuality } })
+    },
+    limit: maxCount
+  });
+  
+  // Transform to finetuning format
+  const dataset = interactions.interactions.map(int => ({
+    messages: [
+      { role: 'user', content: int.request.messages?.[0]?.content || '' },
+      { role: 'assistant', content: int.response.choices?.[0]?.message?.content || '' }
+    ]
+  }));
+  
+  // Write to JSONL file
+  const path = './finetuning-data.jsonl';
+  fs.writeFileSync(path, dataset.map(item => JSON.stringify(item)).join('\n'));
+  
+  return { count: dataset.length, path };
+}
+
+// Usage
+const result = await createFinetuningData({ minQuality: 0.9 });
+console.log(`Created dataset with ${result.count} examples at ${result.path}`);
+```
+
+### Exporting data for analysis
+
+Extract key metrics for external analysis:
+
+```typescript
+import Dirigible from '@dirigible-ai/sdk';
+
+// Initialize for data retrieval
+Dirigible.initialize({
+  apiKey: process.env.DIRIGIBLE_API_KEY,
+  projectId: process.env.DIRIGIBLE_PROJECT_ID,
+  workflowTracking: false  // disable tracking in analytics mode
+});
+
+async function exportAnalytics(days = 7) {
+  // Set date range
+  const endDate = new Date().toISOString();
+  const startDate = new Date(Date.now() - days * 86400000).toISOString();
+  
+  // Get workflows from time period
+  const workflows = await Dirigible.getWorkflows({
+    filters: { startDate, endDate },
+    limit: 500
+  });
+  
+  // Aggregate metrics
+  const metrics = {
+    summary: {
+      total: workflows.total,
+      totalTokens: workflows.workflows.reduce((sum, w) => sum + w.totalTokens, 0),
+      avgDuration: workflows.workflows.reduce((sum, w) => sum + w.totalDurationMs, 0) / 
+                   Math.max(1, workflows.workflows.length)
+    },
+    byModel: {}
+  };
+  
+  // Get model-specific metrics
+  for (const workflow of workflows.workflows) {
+    const interactions = await Dirigible.getWorkflowInteractions(workflow.workflowId);
+    
+    for (const int of interactions.interactions) {
+      const model = int.model;
+      if (!metrics.byModel[model]) {
+        metrics.byModel[model] = { count: 0, tokens: 0, errors: 0 };
+      }
+      
+      metrics.byModel[model].count++;
+      metrics.byModel[model].tokens += int.tokens?.total || 0;
+      if (int.status === 'error') metrics.byModel[model].errors++;
+    }
+  }
+  
+  return metrics;
+}
+
+// Usage
+const analytics = await exportAnalytics(30);
+console.log(`Last 30 days: ${analytics.summary.total} workflows, ${analytics.summary.totalTokens} tokens`);
+```

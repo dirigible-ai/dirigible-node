@@ -3,7 +3,7 @@
 import { DecoratorInput, LLMInteraction, LLMProvider } from './types';
 import { shouldLog, getConfig } from './config';
 import { logInteraction } from './api/client';
-import { getGlobalMetadata, addGlobalMetadata, removeGlobalMetadata, getWorkflow } from './workflow';
+import { getGlobalMetadata, addGlobalMetadata, removeGlobalMetadata, getCurrentWorkflow } from './workflow';
 import { generateInteractionId } from './interaction-ids';
 import * as logger from './logger';
 
@@ -213,9 +213,9 @@ export function observeLLM(input: DecoratorInput = {}) {
         if (config.autoInstrument === false) {
           // Get the current workflow if available
           let workflowMetadata = {};
-          if (config.trackWorkflows !== false) {
+          if (config.workflowTracking !== false) {
             try {
-              const workflow = getWorkflow();
+              const workflow = getCurrentWorkflow();
               workflowMetadata = workflow.getMetadata();
             } catch (error) {
               // Ignore errors in workflow handling
@@ -290,9 +290,9 @@ export function observeLLM(input: DecoratorInput = {}) {
           
           // Get workflow metadata if available
           let workflowMetadata = {};
-          if (config.trackWorkflows !== false) {
+          if (config.workflowTracking !== false) {
             try {
-              const workflow = getWorkflow();
+              const workflow = getCurrentWorkflow();
               workflowMetadata = workflow.getMetadata();
             } catch (e) {
               // Ignore errors in workflow handling
@@ -358,9 +358,9 @@ export function logLLMInteraction(interaction: Partial<LLMInteraction> & {
   const config = getConfig();
   let workflowMetadata = {};
   
-  if (config.trackWorkflows !== false) {
+  if (config.workflowTracking !== false) {
     try {
-      const workflow = getWorkflow();
+      const workflow = getCurrentWorkflow();
       workflowMetadata = workflow.getMetadata();
     } catch (error) {
       // Ignore errors in workflow handling for manual logging
