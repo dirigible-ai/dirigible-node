@@ -14,7 +14,10 @@ import {
   ApiErrorResponse,
   DataRetrievalOptions,
   InteractionResponseWithExports,
-  WorkflowInteractionsResponseWithExports
+  WorkflowInteractionsResponseWithExports,
+  ArtifactResponseWithExports,
+  InteractionsCollectionWithExports,
+  ArtifactsCollectionWithExports
 } from '../types';
 
 /**
@@ -107,18 +110,41 @@ function processApiResponse<T>(response: any): ApiResponse<T> & { markdown?: str
  * @param response Raw API response
  * @returns Standardized collection response object
  */
-function processCollectionResponse<T>(response: any): ApiCollectionResponse<T> {
+function processCollectionResponse<T>(response: any): ApiCollectionResponse<T> & { markdown?: string, json?: string } {
   // Handle error responses
   if (response.error) {
     const errorResponse = response as ApiErrorResponse;
     throw new Error(`API Error: ${errorResponse.error.code} - ${errorResponse.error.message}`);
   }
 
-  // Handle the standard response format
-  return {
-    data: transformResponseToCamelCase(response.data || []),
+  // Process the data, retaining any markdown/json properties on individual items
+  const processedData = response.data ? response.data.map((item: any) => {
+    const processed = transformResponseToCamelCase(item);
+    
+    // Preserve markdown/json if present on the item
+    if (item.markdown) processed.markdown = item.markdown;
+    if (item.json) processed.json = item.json;
+    
+    return processed;
+  }) : [];
+
+  // Create the base response
+  const apiResponse: ApiCollectionResponse<T> & { markdown?: string, json?: string } = {
+    data: processedData as T[],
     meta: transformResponseToCamelCase(response.meta || {})
   };
+  
+  // Add collection-level markdown if present
+  if (response.markdown) {
+    apiResponse.markdown = response.markdown;
+  }
+  
+  // Add collection-level JSON if present
+  if (response.json) {
+    apiResponse.json = response.json;
+  }
+  
+  return apiResponse;
 }
 
 /**
@@ -133,9 +159,27 @@ function processRelationshipResponse<T, R>(response: any): ApiRelationshipRespon
     throw new Error(`API Error: ${errorResponse.error.code} - ${errorResponse.error.message}`);
   }
 
+  // Process the data, handling the possibility of items with markdown/json properties
+  const processedData = { ...transformResponseToCamelCase(response.data || {}) };
+  
+  // Special handling for 'interactions' array if present to preserve markdown/json
+  if (response.data && response.data.interactions && Array.isArray(response.data.interactions)) {
+    const processedInteractions = response.data.interactions.map((item: any) => {
+      const processed = transformResponseToCamelCase(item);
+      
+      // Preserve markdown/json if present on the item
+      if (item.markdown) processed.markdown = item.markdown;
+      if (item.json) processed.json = item.json;
+      
+      return processed;
+    });
+    
+    (processedData as any).interactions = processedInteractions;
+  }
+
   // Create the base response
   const apiResponse: ApiRelationshipResponse<T, R> & { markdown?: string, json?: string } = {
-    data: transformResponseToCamelCase(response.data || {}),
+    data: processedData as T & R,
     meta: transformResponseToCamelCase(response.meta || {})
   };
   
@@ -210,10 +254,12 @@ export async function getInteraction(
 export async function getInteractions(options: {
   filters?: InteractionFilter,
   limit?: number,
-  cursor?: string
-} = {}): Promise<ApiCollectionResponse<LLMInteraction>> {
+  cursor?: string,
+  includeMarkdown?: boolean,
+  includeJson?: boolean
+} = {}): Promise<InteractionsCollectionWithExports> {
   const config = getConfig();
-  const { filters = {}, limit = 50, cursor } = options;
+  const { filters = {}, limit = 50, cursor, includeMarkdown, includeJson } = options;
   
   try {
     logger.debug(`Fetching interactions with filters: ${JSON.stringify(filters)}`);
@@ -240,6 +286,10 @@ export async function getInteractions(options: {
     if (filters.endDate) queryParams.append('endDate', filters.endDate);
     if (filters.interactionId) queryParams.append('interaction_id', filters.interactionId);
     
+    // Add export format options
+    if (includeMarkdown) queryParams.append('includeMarkdown', 'true');
+    if (includeJson) queryParams.append('includeJson', 'true');
+    
     const response = await fetch(`${config.apiUrl}/data/interactions?${queryParams.toString()}`, {
       method: 'GET',
       headers: {
@@ -255,7 +305,7 @@ export async function getInteractions(options: {
     }
     
     const data = await response.json();
-    return processCollectionResponse<LLMInteraction>(data);
+    return processCollectionResponse<LLMInteraction>(data) as InteractionsCollectionWithExports;
   } catch (error) {
     logger.error('Error in getInteractions:', error);
     throw error;
@@ -271,10 +321,12 @@ export async function searchInteractions(options: {
   query: string,
   filters?: InteractionFilter,
   limit?: number,
-  cursor?: string
-} = { query: '' }): Promise<ApiCollectionResponse<LLMInteraction>> {
+  cursor?: string,
+  includeMarkdown?: boolean,
+  includeJson?: boolean
+} = { query: '' }): Promise<InteractionsCollectionWithExports> {
   const config = getConfig();
-  const { query, filters = {}, limit = 50, cursor } = options;
+  const { query, filters = {}, limit = 50, cursor, includeMarkdown, includeJson } = options;
   
   try {
     logger.debug(`Searching interactions with query: "${query}"`);
@@ -302,6 +354,10 @@ export async function searchInteractions(options: {
     if (Object.keys(apiFilters).length > 0) {
       queryParams.append('filters', JSON.stringify(apiFilters));
     }
+    
+    // Add export format options
+    if (includeMarkdown) queryParams.append('includeMarkdown', 'true');
+    if (includeJson) queryParams.append('includeJson', 'true');
       
     const response = await fetch(`${config.apiUrl}/data/search/interactions?${queryParams.toString()}`, {
       method: 'GET',
@@ -318,7 +374,7 @@ export async function searchInteractions(options: {
     }
     
     const data = await response.json();
-    return processCollectionResponse<LLMInteraction>(data);
+    return processCollectionResponse<LLMInteraction>(data) as InteractionsCollectionWithExports;
   } catch (error) {
     logger.error('Error in searchInteractions:', error);
     throw error;
@@ -531,15 +587,27 @@ export async function getWorkflowInteractions(
 /**
  * Get workflow artifacts
  * @param workflowId The workflow ID
- * @returns The artifacts in the workflow
+ * @param options Optional export format options
+ * @returns The artifacts in the workflow, optionally with formatted content
  */
-export async function getWorkflowArtifacts(workflowId: string): Promise<ApiCollectionResponse<Artifact>> {
+export async function getWorkflowArtifacts(
+  workflowId: string,
+  options?: DataRetrievalOptions
+): Promise<ArtifactsCollectionWithExports> {
   const config = getConfig();
   
   try {
     logger.debug(`Fetching artifacts for workflow: ${workflowId}`);
     
-    const response = await fetch(`${config.apiUrl}/data/workflows/${workflowId}/artifacts?projectId=${config.projectId || 'default'}`, {
+    // Build the URL with options if needed
+    const url = `${config.apiUrl}/data/workflows/${workflowId}/artifacts?projectId=${config.projectId || 'default'}`;
+    
+    // Add options as query parameters if needed
+    const urlWithOptions = new URL(url);
+    if (options?.includeMarkdown) urlWithOptions.searchParams.append('includeMarkdown', 'true');
+    if (options?.includeJson) urlWithOptions.searchParams.append('includeJson', 'true');
+    
+    const response = await fetch(urlWithOptions.toString(), {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -554,7 +622,7 @@ export async function getWorkflowArtifacts(workflowId: string): Promise<ApiColle
     }
     
     const data = await response.json();
-    return processCollectionResponse<Artifact>(data);
+    return processCollectionResponse<Artifact>(data) as ArtifactsCollectionWithExports;
   } catch (error) {
     logger.error('Error in getWorkflowArtifacts:', error);
     throw error;
@@ -564,16 +632,28 @@ export async function getWorkflowArtifacts(workflowId: string): Promise<ApiColle
 /**
  * Get a single artifact by ID
  * @param artifactId The unique ID of the artifact
- * @returns The artifact
+ * @param options Optional export format options
+ * @returns The artifact, optionally with formatted content
  * @throws Error if artifact not found or request fails
  */
-export async function getArtifact(artifactId: string): Promise<ApiResponse<Artifact>> {
+export async function getArtifact(
+  artifactId: string,
+  options?: DataRetrievalOptions
+): Promise<ArtifactResponseWithExports> {
   const config = getConfig();
   
   try {
     logger.debug(`Fetching artifact: ${artifactId}`);
     
-    const response = await fetch(`${config.apiUrl}/data/artifacts/${artifactId}?projectId=${config.projectId || 'default'}`, {
+    // Build the URL with options if needed
+    const url = `${config.apiUrl}/data/artifacts/${artifactId}?projectId=${config.projectId || 'default'}`;
+    
+    // Add options as query parameters if needed
+    const urlWithOptions = new URL(url);
+    if (options?.includeMarkdown) urlWithOptions.searchParams.append('includeMarkdown', 'true');
+    if (options?.includeJson) urlWithOptions.searchParams.append('includeJson', 'true');
+    
+    const response = await fetch(urlWithOptions.toString(), {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -592,7 +672,7 @@ export async function getArtifact(artifactId: string): Promise<ApiResponse<Artif
     }
     
     const data = await response.json();
-    return processApiResponse<Artifact>(data);
+    return processApiResponse<Artifact>(data) as ArtifactResponseWithExports;
   } catch (error) {
     logger.error('Error in getArtifact:', error);
     throw error;

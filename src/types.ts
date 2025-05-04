@@ -149,6 +149,16 @@ export interface LLMInteraction {
    * Custom metadata for the request
    */
   metadata?: Record<string, any>;
+  
+  /**
+   * Optional Markdown formatted version of the interaction
+   */
+  markdown?: string;
+  
+  /**
+   * Optional JSON formatted version of the interaction
+   */
+  json?: string;
 }
 
 /**
@@ -191,6 +201,16 @@ export interface Artifact {
   metadata: Record<string, any>;
   timestamp: string;
   createdAt: string;
+  
+  /**
+   * Optional Markdown formatted version of the artifact
+   */
+  markdown?: string;
+  
+  /**
+   * Optional JSON formatted version of the artifact
+   */
+  json?: string;
 }
 
 /**
@@ -386,6 +406,51 @@ export interface WorkflowInteractionsResponseWithExports extends ApiRelationship
   
   /**
    * JSON formatted version of the workflow with interactions
+   */
+  json?: string;
+}
+
+/**
+ * Extended response for artifact with export formats
+ */
+export interface ArtifactResponseWithExports extends ApiResponse<Artifact> {
+  /**
+   * Markdown formatted version of the artifact
+   */
+  markdown?: string;
+  
+  /**
+   * JSON formatted version of the artifact
+   */
+  json?: string;
+}
+
+/**
+ * Extended response for interactions collection with export formats
+ */
+export interface InteractionsCollectionWithExports extends ApiCollectionResponse<LLMInteraction> {
+  /**
+   * Markdown formatted version of the interactions collection
+   */
+  markdown?: string;
+  
+  /**
+   * JSON formatted version of the interactions collection
+   */
+  json?: string;
+}
+
+/**
+ * Extended response for artifacts collection with export formats
+ */
+export interface ArtifactsCollectionWithExports extends ApiCollectionResponse<Artifact> {
+  /**
+   * Markdown formatted version of the artifacts collection
+   */
+  markdown?: string;
+  
+  /**
+   * JSON formatted version of the artifacts collection
    */
   json?: string;
 }
