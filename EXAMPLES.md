@@ -1,6 +1,6 @@
 # Dirigible SDK examples
 
-This page contains practical examples of how to use the Dirigible SDK to monitor your AI workflows. We'll demonstrate both simple and advanced scenarios to show how Dirigible can help you track and analyze your LLM interactions.
+This page contains practical examples of how to use the Dirigible SDK to track your AI workflows. We'll demonstrate both simple and advanced scenarios to show how Dirigible can help you track and analyze your AI interactions and data artifacts.
 
 ## Table of Contents
 
@@ -41,7 +41,7 @@ dotenv.config();
 
 ### 2. Initialize the SDK
 
-Now we initialize the SDK with our API credentials and add workflow metadata that will be attached to all interactions in this workflow. This helps search and organize your data in the Dirigible dashboard.
+Now we initialize the SDK with our API credentials and add workflow metadata that will be attached to all interactions in this workflow. This helps organize, filter and search your data.
 
 ```typescript
 Dirigible.initialize({
@@ -433,29 +433,42 @@ Dirigible.initialize({
 
 async function getContextExamples(query, n = 3) {
   // Find similar successful interactions
-  const similar = await Dirigible.searchInteractions({
+  const searchResponse = await Dirigible.searchInteractions({
     query: query,
-    filters: { status: 'success' },
-    limit: n
+    filters: { 
+      status: 'success',
+      metadata: { quality_score: { $gte: 0.9 } } // High quality examples only
+    },
+    limit: n,
+    includeMarkdown: true
   });
   
-  // Format as examples for prompt enhancement
-  return similar.interactions.map(int => ({
-    question: int.request.messages?.[0]?.content || '',
-    answer: int.response.choices?.[0]?.message?.content || ''
-  }));
+  // Use the individual exports from each search result
+  const examples = searchResponse.data
+    .filter(interaction => interaction.markdown)
+    .map(interaction => interaction.markdown);
+  
+  // Create a system prompt with examples
+  const systemPrompt = `
+    Answer using these successful examples as references:
+    
+    ${examples.join('\n\n---\n\n')}
+    
+    When answering new questions, follow a similar structure and approach.
+  `;
+  
+  return systemPrompt;
 }
 
-// Usage
-const examples = await getContextExamples("How do I implement an agent?");
-const enhancedPrompt = [
-  { role: 'system', content: 'Answer leveraging these examples:' },
-  ...examples.flatMap(ex => [
-    { role: 'user', content: ex.question },
-    { role: 'assistant', content: ex.answer }
-  ]),
-  { role: 'user', content: currentUserQuestion }
-];
+// Usage in an LLM call
+const systemPrompt = await getContextExamples("How do I implement an agent?");
+const response = await openai.chat.completions.create({
+  model: "gpt-4o",
+  messages: [
+    { role: 'system', content: systemPrompt },
+    { role: 'user', content: currentUserQuestion }
+  ]
+});
 ```
 
 ### Preparing data for finetuning
@@ -476,28 +489,40 @@ Dirigible.initialize({
 async function createFinetuningData(options = {}) {
   const { minQuality = 0.8, maxCount = 1000 } = options;
   
-  // Get successful interactions with high quality scores
-  const interactions = await Dirigible.getInteractions({
+  // Get successful interactions with high quality scores and JSON exports
+  const searchResponse = await Dirigible.getInteractions({
     filters: {
       status: 'success',
-      metadata: JSON.stringify({ quality_score: { $gte: minQuality } })
+      metadata: { quality_score: { $gte: minQuality } }
     },
-    limit: maxCount
+    limit: maxCount,
+    includeJson: true
   });
   
-  // Transform to finetuning format
-  const dataset = interactions.interactions.map(int => ({
-    messages: [
-      { role: 'user', content: int.request.messages?.[0]?.content || '' },
-      { role: 'assistant', content: int.response.choices?.[0]?.message?.content || '' }
-    ]
-  }));
+  // Use the individual JSON exports directly from each interaction
+  const dataset = searchResponse.data
+    .filter(interaction => interaction.json)
+    .map(interaction => {
+      // Parse the JSON export which is already in a training-friendly format
+      const parsed = JSON.parse(interaction.json);
+      return {
+        messages: [
+          { role: 'user', content: parsed.request.content },
+          { role: 'assistant', content: parsed.response.content }
+        ]
+      };
+    });
+  
+  // Filter out any empty or invalid examples
+  const validExamples = dataset.filter(item => 
+    item.messages[0].content.trim() && item.messages[1].content.trim()
+  );
   
   // Write to JSONL file
   const path = './finetuning-data.jsonl';
-  fs.writeFileSync(path, dataset.map(item => JSON.stringify(item)).join('\n'));
+  fs.writeFileSync(path, validExamples.map(item => JSON.stringify(item)).join('\n'));
   
-  return { count: dataset.length, path };
+  return { count: validExamples.length, path };
 }
 
 // Usage
@@ -525,7 +550,7 @@ async function exportAnalytics(days = 7) {
   const startDate = new Date(Date.now() - days * 86400000).toISOString();
   
   // Get workflows from time period
-  const workflows = await Dirigible.getWorkflows({
+  const response = await Dirigible.getWorkflows({
     filters: { startDate, endDate },
     limit: 500
   });
@@ -533,19 +558,19 @@ async function exportAnalytics(days = 7) {
   // Aggregate metrics
   const metrics = {
     summary: {
-      total: workflows.total,
-      totalTokens: workflows.workflows.reduce((sum, w) => sum + w.totalTokens, 0),
-      avgDuration: workflows.workflows.reduce((sum, w) => sum + w.totalDurationMs, 0) / 
-                   Math.max(1, workflows.workflows.length)
+      total: response.meta.pagination.total,
+      totalTokens: response.data.reduce((sum, w) => sum + w.totalTokens, 0),
+      avgDuration: response.data.reduce((sum, w) => sum + w.totalDurationMs, 0) / 
+                   Math.max(1, response.data.length)
     },
     byModel: {}
   };
   
   // Get model-specific metrics
-  for (const workflow of workflows.workflows) {
-    const interactions = await Dirigible.getWorkflowInteractions(workflow.workflowId);
+  for (const workflow of response.data) {
+    const interactionsResult = await Dirigible.getWorkflowInteractions(workflow.workflowId);
     
-    for (const int of interactions.interactions) {
+    for (const int of interactionsResult.data.interactions) {
       const model = int.model;
       if (!metrics.byModel[model]) {
         metrics.byModel[model] = { count: 0, tokens: 0, errors: 0 };

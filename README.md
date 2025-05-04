@@ -118,7 +118,7 @@ With those two steps (initializing + wrapping), the application workflow and cor
 
 ### 3. Add workflow metadata
 
-You can add workflow-specific metadata when initializing:
+You can add workflow-specific metadata when initializing, that will be attached to the workflow and all interactions:
 
 ```typescript
 import Dirigible from '@dirigible-ai/sdk';
@@ -174,31 +174,6 @@ class AIService {
 
 That's it! With those four steps, your AI workflows and interactions are entirely tracked and visualized in your Dirigible dashboard with the right metadata.
 
-## Import styles
-
-The SDK supports multiple import styles to fit your preferences:
-
-```typescript
-// Recommended approach: Import Dirigible namespace and special functions directly
-import Dirigible, { observeAIClient, observeLLM } from '@dirigible-ai/sdk';
-
-// For initialization and utilities
-Dirigible.initialize({...});
-Dirigible.saveArtifact('results', data);
-Dirigible.addGlobalMetadata({...});
-
-// For wrapping clients
-const openai = observeAIClient(client);
-
-// For decorating methods
-class Service {
-  @observeLLM({...})
-  async method() {...}
-}
-```
-
-This approach gives you the best of both worlds - a clean namespace for most functions and direct access to the most commonly used ones.
-
 ## Global metadata
 
 You can add global metadata that will be included with all requests:
@@ -224,7 +199,7 @@ It can for example be used to add metadata that is generated during the workflow
 
 ## Artifacts
 
-In addition to tracking LLM interactions, you can log data artifacts in your workflows:
+In addition to LLM interactions, you can log intermediary data artifacts during your workflows:
 
 ```typescript
 import Dirigible from '@dirigible-ai/sdk';
