@@ -34,7 +34,7 @@ export function patchLLMLibraries(): void {
   logger.debug('Starting to patch LLM libraries');
   patchIfExists('openai', patchOpenAI);
   patchIfExists('@anthropic-ai/sdk', patchAnthropic);
-  patchIfExists('@google/genai', patchGemini);
+  patchIfExists('@google/genai', patchGoogle);
 }
 
 /**
@@ -97,29 +97,29 @@ function patchAnthropic(AnthropicModule: any): void {
 }
 
 /**
- * Patch the Google Gemini library
+ * Patch the Google AI library
  */
-function patchGemini(GeminiModule: any): void {
+function patchGoogle(GoogleModule: any): void {
   // Check if already patched
-  if (GeminiModule._patched) {
-    logger.debug('Gemini module already patched, skipping');
+  if (GoogleModule._patched) {
+    logger.debug('Google module already patched, skipping');
     return;
   }
   
-  const originalGenAI = GeminiModule.GoogleGenAI;
+  const originalGenAI = GoogleModule.GoogleGenAI;
   
   // Replace the constructor
-  GeminiModule.GoogleGenAI = function(...args: any[]) {
-    logger.debug('Creating instrumented Gemini client');
+  GoogleModule.GoogleGenAI = function(...args: any[]) {
+    logger.debug('Creating instrumented Google client');
     const client = new originalGenAI(...args);
-    const wrappedClient = wrapLLMClient(client, LLMProvider.GEMINI);
-    logger.debug('Gemini client wrapped successfully');
+    const wrappedClient = wrapLLMClient(client, LLMProvider.GOOGLE);
+    logger.debug('Google client wrapped successfully');
     return wrappedClient;
   };
   
   // Mark as patched to prevent double patching
-  GeminiModule._patched = true;
-  logger.debug('Gemini module patched successfully');
+  GoogleModule._patched = true;
+  logger.debug('Google module patched successfully');
 }
 
 /**
@@ -133,12 +133,12 @@ function detectProvider(client: any): LLMProvider {
   
   if (constructorName.includes('openai')) return LLMProvider.OPENAI;
   if (constructorName.includes('anthropic')) return LLMProvider.ANTHROPIC;
-  if (constructorName.includes('genai') || constructorName.includes('gemini')) return LLMProvider.GEMINI;
+  if (constructorName.includes('genai') || constructorName.includes('google')) return LLMProvider.GOOGLE;
   
   // Check for known methods/properties
   if (client.chat?.completions?.create) return LLMProvider.OPENAI;
   if (client.messages?.create) return LLMProvider.ANTHROPIC;
-  if (client.models?.generateContent) return LLMProvider.GEMINI;
+  if (client.models?.generateContent) return LLMProvider.GOOGLE;
   
   logger.debug('Could not detect provider, defaulting to CUSTOM');
   return LLMProvider.CUSTOM;
@@ -156,24 +156,24 @@ export function observeAIClient<T>(client: T, provider?: LLMProvider): T {
     provider = detectProvider(client);
   }
   
-  // Special handling for Gemini
-  if (provider === LLMProvider.GEMINI) {
-    // Check if we've already tried patching Gemini
+  // Special handling for Google
+  if (provider === LLMProvider.GOOGLE) {
+    // Check if we've already tried patching Google
     const globalAny = global as any;
-    if (globalAny.__dirigibleGeminiPatchAttempted !== true) {
+    if (globalAny.__dirigibleGooglePatchAttempted !== true) {
       // Mark that we've attempted patching to avoid repeated attempts
-      globalAny.__dirigibleGeminiPatchAttempted = true;
+      globalAny.__dirigibleGooglePatchAttempted = true;
       
-      // Find Gemini module in require.cache if it exists
+      // Find Google module in require.cache if it exists
       if (require && require.cache) {
         const modulePath = Object.keys(require.cache).find(path => 
           path.includes('@google/genai') || path.includes('genai')
         );
         
         if (modulePath && require.cache[modulePath]) {
-          const GeminiModule = require.cache[modulePath].exports;
-          if (GeminiModule && !GeminiModule._patched) {
-            patchGemini(GeminiModule);
+          const GoogleModule = require.cache[modulePath].exports;
+          if (GoogleModule && !GoogleModule._patched) {
+            patchGoogle(GoogleModule);
           }
         }
       }
@@ -515,14 +515,14 @@ function extractModel(request: any, response: any, provider: LLMProvider): strin
       return String(response.model);
     }
     
-    // Gemini might have model inside candidates
+    // Google might have model inside candidates
     if (response.candidates && Array.isArray(response.candidates) && response.candidates.length > 0) {
       if (response.candidates[0].modelConfig?.model) {
         return String(response.candidates[0].modelConfig.model);
       }
     }
     
-    // Gemini model config
+    // Google model config
     if (response.modelConfig?.model) {
       return String(response.modelConfig.model);
     }
@@ -534,8 +534,8 @@ function extractModel(request: any, response: any, provider: LLMProvider): strin
       return 'openai-model';
     case LLMProvider.ANTHROPIC:
       return 'anthropic-model';
-    case LLMProvider.GEMINI:
-      return 'gemini-model';
+    case LLMProvider.GOOGLE:
+      return 'google-model';
     default:
       return 'unknown';
   }
@@ -571,7 +571,7 @@ function extractTokens(response: any, provider: LLMProvider): { input?: number; 
       }
       break;
       
-    case LLMProvider.GEMINI:
+    case LLMProvider.GOOGLE:
       if (response.usageMetadata && typeof response.usageMetadata === 'object') {
         return {
           input: response.usageMetadata.promptTokenCount,

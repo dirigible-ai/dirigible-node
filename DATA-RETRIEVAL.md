@@ -131,11 +131,11 @@ const response = await Dirigible.getInteractions({
     model: 'gpt-4o',        // Filter by model
     status: 'success',      // Filter by status (success/error)
     startDate: '2025-04-01', // Filter by date range
-    metadata: JSON.stringify({
+    metadata: {
       task: 'generate_final_response', // Filter by custom metadata
       userId: 'user-123',
       quality_score: { $gte: 0.8 }    // Use operators for numeric values
-    })
+    }
   },
   limit: 50,                // Limit results (default: 50)
   includeMarkdown: true,    // Get Markdown for all interactions
@@ -196,11 +196,11 @@ const response = await Dirigible.searchInteractions({
   filters: {
     provider: 'anthropic',        // Additional filters
     startDate: '2025-04-01',
-    metadata: JSON.stringify({    // Filter by custom metadata
+    metadata: {                   // Filter by custom metadata
       task: 'classify_input',
       importance: 'high',
       accuracy: { $lt: 0.9 }      // Find lower accuracy classifications
-    })
+    }
   },
   limit: 50,
   includeMarkdown: true,          // Get formatted results
@@ -267,10 +267,10 @@ const response = await Dirigible.getWorkflows({
     environment: 'production',      // Filter by environment
     workflowType: 'conversation',   // Filter by type
     startDate: '2025-04-01',        // Filter by date range
-    metadata: JSON.stringify({      // Filter by custom metadata
+    metadata: {                     // Filter by custom metadata
       sessionType: 'customer_onboarding',
       completed: true
-    })
+    }
   },
   limit: 20
 });
@@ -398,11 +398,11 @@ const response = await Dirigible.searchWorkflows({
   filters: {
     environment: 'production',        // Additional filters
     startDate: '2025-04-01',
-    metadata: JSON.stringify({        // Filter by custom metadata
+    metadata: {                       // Filter by custom metadata
       sessionType: 'support_ticket',
       priority: 'high',
       resolution_time: { $lte: 300 }  // Sessions resolved in 5 min or less
-    })
+    }
   },
   limit: 20
 });
@@ -464,11 +464,11 @@ All retrieval methods that accept filters support filtering by custom metadata t
 const response = await Dirigible.getInteractions({
   filters: {
     provider: 'anthropic', 
-    metadata: JSON.stringify({
+    metadata: {
       task: 'generate_final_response',
       userId: 'user-123',
       quality_score: { $gte: 0.8 } // Operators for numeric comparisons
-    })
+    }
   },
   limit: 10
 });
@@ -477,10 +477,10 @@ const response = await Dirigible.getInteractions({
 const searchResults = await Dirigible.searchInteractions({
   query: 'error',
   filters: {
-    metadata: JSON.stringify({ 
+    metadata: { 
       importance: 'high',
       resolved: false
-    })
+    }
   }
 });
 
@@ -488,10 +488,10 @@ const searchResults = await Dirigible.searchInteractions({
 const workflowResults = await Dirigible.searchWorkflows({
   query: 'customer',
   filters: {
-    metadata: JSON.stringify({
+    metadata: {
       conversationType: 'support',
       customerTier: 'premium'
-    })
+    }
   }
 });
 ```
@@ -862,7 +862,7 @@ async function getContextExamples(query, n = 3) {
     query: query,
     filters: { 
       status: 'success',
-      metadata: JSON.stringify({ quality_score: { $gte: 0.9 } }) // High quality examples only
+      metadata: { quality_score: { $gte: 0.9 } } // High quality examples only
     },
     limit: n,
     includeMarkdown: true
@@ -918,7 +918,7 @@ async function createFinetuningData(options = {}) {
   const searchResponse = await Dirigible.getInteractions({
     filters: {
       status: 'success',
-      metadata: JSON.stringify({ quality_score: { $gte: minQuality } })
+      metadata: { quality_score: { $gte: minQuality } }
     },
     limit: maxCount,
     includeJson: true

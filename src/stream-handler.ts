@@ -80,7 +80,7 @@ export class StreamHandler {
         }
         break;
         
-      case LLMProvider.GEMINI:
+      case LLMProvider.GOOGLE:
         // Extract content from candidates
         if (chunk.candidates?.[0]?.content?.parts) {
           const parts = chunk.candidates[0].content.parts;
@@ -170,7 +170,7 @@ export class StreamHandler {
         }
         break;
         
-      case LLMProvider.GEMINI:
+      case LLMProvider.GOOGLE:
         // Usage metadata
         if (chunk.usageMetadata) {
           this.usageData = chunk.usageMetadata;
@@ -219,7 +219,7 @@ export class StreamHandler {
           usage: this.usageData
         };
       
-      case LLMProvider.GEMINI:
+      case LLMProvider.GOOGLE:
         return {
           candidates: [{
             content: {
@@ -232,7 +232,7 @@ export class StreamHandler {
           }],
           usageMetadata: this.usageData,
           modelConfig: {
-            model: this.request.model || 'gemini-model'
+            model: this.request.model || 'google-model'
           }
         };
       
@@ -282,7 +282,7 @@ export class StreamHandler {
           total: totalTokens
         };
         
-      case LLMProvider.GEMINI:
+      case LLMProvider.GOOGLE:
         return {
           input: this.usageData.promptTokenCount,
           output: this.usageData.candidatesTokenCount,

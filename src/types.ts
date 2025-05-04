@@ -8,7 +8,7 @@ import { LogLevel } from './logger';
 export enum LLMProvider {
   OPENAI = 'openai',
   ANTHROPIC = 'anthropic',
-  GEMINI = 'gemini',
+  GOOGLE = 'google',
   CUSTOM = 'custom',
 }
 
@@ -232,7 +232,7 @@ export interface InteractionFilter {
   startDate?: string;
   endDate?: string;
   interactionId?: string;
-  metadata?: string; // JSON string
+  metadata?: string | Record<string, any>; // Accept both string and object
   toolName?: string;
 }
 
@@ -244,7 +244,7 @@ export interface WorkflowFilter {
   workflowType?: string;
   startDate?: string;
   endDate?: string;
-  metadata?: string; // JSON string
+  metadata?: string | Record<string, any>; // Accept both string and object
   status?: string; // Support status:error filtering
 }
 

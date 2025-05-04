@@ -33,7 +33,7 @@ Refer to [Examples](https://github.com/dirigible-ai/dirigible-sdk-typescript/blo
 ## Features
 
 - 🪄 **Single wrapper**: One `observeAIClient` wrapper for all AI providers
-- 🔍 **Auto-detection**: Automatically detects OpenAI, Anthropic, and Gemini models
+- 🔍 **Auto-detection**: Automatically detects OpenAI, Anthropic, and Google models
 - 🔄 **Workflow tracking**: Automatically group related interactions into workflows
 - 🏷️ **Rich metadata**: Attach custom metadata at global, workflow, and interaction levels
 - 💎 **Data artifacts**: In addition to LLM interactions, store intermediary data artifacts
@@ -109,8 +109,8 @@ const anthropic = observeAIClient(new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY
 }));
 
-const gemini = observeAIClient(new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY
+const google = observeAIClient(new GoogleGenAI({
+  apiKey: process.env.GOOGLE_API_KEY
 }));
 ```
 
@@ -460,7 +460,7 @@ Dirigible.initialize({
 
 - OpenAI
 - Anthropic
-- Google Gemini
+- Google AI
 - Custom providers (with manual configuration)
 
 ## Configuring log levels

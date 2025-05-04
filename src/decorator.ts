@@ -37,9 +37,9 @@ function detectProvider(params: any, context: any): LLMProvider {
       return LLMProvider.ANTHROPIC;
     }
     
-    // Gemini models include 'gemini'
+    // Google models include 'gemini'
     if (modelName.includes('gemini')) {
-      return LLMProvider.GEMINI;
+      return LLMProvider.GOOGLE;
     }
   }
   
@@ -48,7 +48,7 @@ function detectProvider(params: any, context: any): LLMProvider {
     const constructorName = context.constructor?.name?.toLowerCase() || '';
     if (constructorName.includes('openai')) return LLMProvider.OPENAI;
     if (constructorName.includes('anthropic')) return LLMProvider.ANTHROPIC;
-    if (constructorName.includes('genai') || constructorName.includes('gemini')) return LLMProvider.GEMINI;
+    if (constructorName.includes('genai') || constructorName.includes('google')) return LLMProvider.GOOGLE;
   }
   
   // Default to CUSTOM if detection fails
@@ -92,8 +92,8 @@ function extractTokens(provider: LLMProvider, response: any): { input?: number; 
       }
       break;
       
-    case LLMProvider.GEMINI:
-      // Gemini format
+    case LLMProvider.GOOGLE:
+      // Google format
       if (response.usage && typeof response.usage === 'object') {
         return {
           input: typeof response.usage.promptTokenCount === 'number' ? response.usage.promptTokenCount : undefined,
@@ -102,7 +102,7 @@ function extractTokens(provider: LLMProvider, response: any): { input?: number; 
         };
       }
       
-      // Some Gemini responses have token info directly on candidates
+      // Some Google responses have token info directly on candidates
       if (response.candidates && Array.isArray(response.candidates) && response.candidates.length > 0) {
         const candidate = response.candidates[0];
         if (candidate.tokenCount) {

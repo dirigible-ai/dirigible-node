@@ -286,6 +286,14 @@ export async function getInteractions(options: {
     if (filters.endDate) queryParams.append('endDate', filters.endDate);
     if (filters.interactionId) queryParams.append('interaction_id', filters.interactionId);
     
+    // Handle metadata - automatically JSON stringify if it's an object
+    if (filters.metadata) {
+      const metadataStr = typeof filters.metadata === 'string' 
+        ? filters.metadata 
+        : JSON.stringify(filters.metadata);
+      queryParams.append('metadata', metadataStr);
+    }
+    
     // Add export format options
     if (includeMarkdown) queryParams.append('includeMarkdown', 'true');
     if (includeJson) queryParams.append('includeJson', 'true');
@@ -453,6 +461,14 @@ export async function getWorkflows(options: {
     if (filters.workflowType) queryParams.append('workflowType', filters.workflowType);
     if (filters.startDate) queryParams.append('startDate', filters.startDate);
     if (filters.endDate) queryParams.append('endDate', filters.endDate);
+    
+    // Handle metadata - automatically JSON stringify if it's an object
+    if (filters.metadata) {
+      const metadataStr = typeof filters.metadata === 'string' 
+        ? filters.metadata 
+        : JSON.stringify(filters.metadata);
+      queryParams.append('metadata', metadataStr);
+    }
     
     const response = await fetch(`${config.apiUrl}/data/workflows?${queryParams.toString()}`, {
       method: 'GET',
