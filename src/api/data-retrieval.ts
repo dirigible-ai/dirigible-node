@@ -79,7 +79,12 @@ function transformCamelToSnakeCase(obj: any): any {
  * @param response Raw API response
  * @returns Standardized response object
  */
-function processApiResponse<T>(response: any): ApiResponse<T> & { markdown?: string, json?: string } {
+function processApiResponse<T>(response: any): ApiResponse<T> & { 
+  markdown?: string, 
+  requestMarkdown?: string, 
+  responseMarkdown?: string, 
+  json?: string 
+} {
   // Handle error responses
   if (response.error) {
     const errorResponse = response as ApiErrorResponse;
@@ -87,7 +92,12 @@ function processApiResponse<T>(response: any): ApiResponse<T> & { markdown?: str
   }
 
   // Create the base response
-  const apiResponse: ApiResponse<T> & { markdown?: string, json?: string } = {
+  const apiResponse: ApiResponse<T> & { 
+    markdown?: string, 
+    requestMarkdown?: string, 
+    responseMarkdown?: string, 
+    json?: string 
+  } = {
     data: transformResponseToCamelCase(response.data),
     meta: transformResponseToCamelCase(response.meta || {})
   };
@@ -95,6 +105,16 @@ function processApiResponse<T>(response: any): ApiResponse<T> & { markdown?: str
   // Add markdown if present
   if (response.markdown) {
     apiResponse.markdown = response.markdown;
+  }
+  
+  // Add request markdown if present
+  if (response.requestMarkdown) {
+    apiResponse.requestMarkdown = response.requestMarkdown;
+  }
+  
+  // Add response markdown if present
+  if (response.responseMarkdown) {
+    apiResponse.responseMarkdown = response.responseMarkdown;
   }
   
   // Add JSON if present
@@ -110,7 +130,12 @@ function processApiResponse<T>(response: any): ApiResponse<T> & { markdown?: str
  * @param response Raw API response
  * @returns Standardized collection response object
  */
-function processCollectionResponse<T>(response: any): ApiCollectionResponse<T> & { markdown?: string, json?: string } {
+function processCollectionResponse<T>(response: any): ApiCollectionResponse<T> & { 
+  markdown?: string, 
+  requestMarkdown?: string, 
+  responseMarkdown?: string, 
+  json?: string 
+} {
   // Handle error responses
   if (response.error) {
     const errorResponse = response as ApiErrorResponse;
@@ -123,13 +148,20 @@ function processCollectionResponse<T>(response: any): ApiCollectionResponse<T> &
     
     // Preserve markdown/json if present on the item
     if (item.markdown) processed.markdown = item.markdown;
+    if (item.requestMarkdown) processed.requestMarkdown = item.requestMarkdown;
+    if (item.responseMarkdown) processed.responseMarkdown = item.responseMarkdown;
     if (item.json) processed.json = item.json;
     
     return processed;
   }) : [];
 
   // Create the base response
-  const apiResponse: ApiCollectionResponse<T> & { markdown?: string, json?: string } = {
+  const apiResponse: ApiCollectionResponse<T> & { 
+    markdown?: string, 
+    requestMarkdown?: string, 
+    responseMarkdown?: string, 
+    json?: string 
+  } = {
     data: processedData as T[],
     meta: transformResponseToCamelCase(response.meta || {})
   };
@@ -137,6 +169,16 @@ function processCollectionResponse<T>(response: any): ApiCollectionResponse<T> &
   // Add collection-level markdown if present
   if (response.markdown) {
     apiResponse.markdown = response.markdown;
+  }
+  
+  // Add collection-level request markdown if present
+  if (response.requestMarkdown) {
+    apiResponse.requestMarkdown = response.requestMarkdown;
+  }
+  
+  // Add collection-level response markdown if present
+  if (response.responseMarkdown) {
+    apiResponse.responseMarkdown = response.responseMarkdown;
   }
   
   // Add collection-level JSON if present
@@ -152,7 +194,12 @@ function processCollectionResponse<T>(response: any): ApiCollectionResponse<T> &
  * @param response Raw API response
  * @returns Standardized relationship response object
  */
-function processRelationshipResponse<T, R>(response: any): ApiRelationshipResponse<T, R> & { markdown?: string, json?: string } {
+function processRelationshipResponse<T, R>(response: any): ApiRelationshipResponse<T, R> & { 
+  markdown?: string, 
+  requestMarkdown?: string, 
+  responseMarkdown?: string, 
+  json?: string 
+} {
   // Handle error responses
   if (response.error) {
     const errorResponse = response as ApiErrorResponse;
@@ -169,6 +216,8 @@ function processRelationshipResponse<T, R>(response: any): ApiRelationshipRespon
       
       // Preserve markdown/json if present on the item
       if (item.markdown) processed.markdown = item.markdown;
+      if (item.requestMarkdown) processed.requestMarkdown = item.requestMarkdown;
+      if (item.responseMarkdown) processed.responseMarkdown = item.responseMarkdown;
       if (item.json) processed.json = item.json;
       
       return processed;
@@ -178,7 +227,12 @@ function processRelationshipResponse<T, R>(response: any): ApiRelationshipRespon
   }
 
   // Create the base response
-  const apiResponse: ApiRelationshipResponse<T, R> & { markdown?: string, json?: string } = {
+  const apiResponse: ApiRelationshipResponse<T, R> & { 
+    markdown?: string, 
+    requestMarkdown?: string, 
+    responseMarkdown?: string, 
+    json?: string 
+  } = {
     data: processedData as T & R,
     meta: transformResponseToCamelCase(response.meta || {})
   };
@@ -186,6 +240,16 @@ function processRelationshipResponse<T, R>(response: any): ApiRelationshipRespon
   // Add markdown if present
   if (response.markdown) {
     apiResponse.markdown = response.markdown;
+  }
+  
+  // Add request markdown if present
+  if (response.requestMarkdown) {
+    apiResponse.requestMarkdown = response.requestMarkdown;
+  }
+  
+  // Add response markdown if present
+  if (response.responseMarkdown) {
+    apiResponse.responseMarkdown = response.responseMarkdown;
   }
   
   // Add JSON if present

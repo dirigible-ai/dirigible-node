@@ -2,11 +2,9 @@
 
 JavaScript / TypeScript library for the [Dirigible AI](https://dirigible.ai) API.
 
-A lightweight SDK for monitoring AI and Large Language Model (LLM) workflows.
+A lightweight SDK for monitoring and improving AI and Large Language Model (LLM) workflows.
 
-Simply wrap your AI clients and add a decorator for complete observability.
-
-Refer to [Examples](https://github.com/dirigible-ai/dirigible-sdk-typescript/blob/main/EXAMPLES.md) to see practical examples or check the [Data Retrieval API](https://github.com/dirigible-ai/dirigible-sdk-typescript/blob/main/DATA-RETRIEVAL.md) documentation to learn how to access and analyze your data.
+Check the [Product documentation](https://dirigible.ai/documentation) for more details and practical examples.
 
 ## Table of contents
 

@@ -156,6 +156,16 @@ export interface LLMInteraction {
   markdown?: string;
   
   /**
+   * Optional Markdown formatted version of just the request
+   */
+  requestMarkdown?: string;
+  
+  /**
+   * Optional Markdown formatted version of just the response
+   */
+  responseMarkdown?: string;
+  
+  /**
    * Optional JSON formatted version of the interaction
    */
   json?: string;
@@ -390,6 +400,16 @@ export interface InteractionResponseWithExports extends ApiResponse<LLMInteracti
   markdown?: string;
   
   /**
+   * Request part only in Markdown format
+   */
+  requestMarkdown?: string;
+  
+  /**
+   * Response part only in Markdown format
+   */
+  responseMarkdown?: string;
+  
+  /**
    * JSON formatted version of the interaction
    */
   json?: string;
@@ -403,6 +423,16 @@ export interface WorkflowInteractionsResponseWithExports extends ApiRelationship
    * Markdown formatted version of the workflow with interactions
    */
   markdown?: string;
+  
+  /**
+   * Request parts only in Markdown format
+   */
+  requestMarkdown?: string;
+  
+  /**
+   * Response parts only in Markdown format
+   */
+  responseMarkdown?: string;
   
   /**
    * JSON formatted version of the workflow with interactions
@@ -433,6 +463,16 @@ export interface InteractionsCollectionWithExports extends ApiCollectionResponse
    * Markdown formatted version of the interactions collection
    */
   markdown?: string;
+  
+  /**
+   * Collection of requests in Markdown format
+   */
+  requestMarkdown?: string;
+  
+  /**
+   * Collection of responses in Markdown format
+   */
+  responseMarkdown?: string;
   
   /**
    * JSON formatted version of the interactions collection
