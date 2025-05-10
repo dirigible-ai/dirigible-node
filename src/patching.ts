@@ -3,7 +3,7 @@
 import { LLMInteraction, LLMProvider } from './types';
 import { logInteraction } from './api/client';
 import { getGlobalMetadata, getCurrentWorkflow } from './workflow';
-import { generateInteractionId } from './interaction-ids';
+import { generateInteractionId } from './elements-ids';
 import * as logger from './logger';
 import { createStreamWrapper, processStreamInBackground } from './stream-handler';
 

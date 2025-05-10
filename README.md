@@ -18,7 +18,7 @@ Check the [Product documentation](https://dirigible.ai/documentation) for more d
 - [Import styles](#import-styles)
 - [Global metadata](#global-metadata)
 - [Artifacts](#artifacts)
-- [Interaction and workflow IDs](#interaction-and-workflow-ids)
+- [Workflow, interaction and artifact IDs](#workflow-artifact-and-interaction-ids)
 - [Data retrieval](#data-retrieval)
 - [Streaming](#streaming)
 - [Making sure logs are sent](#making-sure-logs-are-sent)
@@ -231,9 +231,7 @@ Dirigible.saveArtifact('processed_results', {
 
 Artifacts can be used to track intermediate steps in your pipelines or see what data was used for generation.
 
-## Interaction and workflow IDs
-
-For better traceability and easier correlation with your own systems, both workflows and individual interactions have unique IDs that you can access:
+## Workflow, interaction and artifact IDs
 
 ```typescript
 import Dirigible, { observeAIClient } from '@dirigible-ai/sdk';
@@ -252,19 +250,27 @@ const response = await openai.chat.completions.create({
   messages: [{ role: 'user', content: 'Hello world' }]
 });
 
-// Get the ID of the interaction that just occurred (do it just after)
+// Get the ID of the interaction that just occurred
 const interactionId = Dirigible.getInteractionId();
 console.log(`Interaction ID: ${interactionId}`);
+
+// Store an artifact and get its ID
+Dirigible.saveArtifact('search_results', searchResults);
+const artifactId = Dirigible.getArtifactId();
+console.log(`Artifact ID: ${artifactId}`);
+
+// Or get the most recent artifact ID from the current workflow
+const workflowArtifactId = Dirigible.getCurrentWorkflowArtifactId();
 ```
 
-This is particularly useful for cross-system tracing and debugging complex AI workflows that span multiple services.
-
 You can also create direct links to Dirigible to easily access those logs:
+
 ```typescript
 `https://dirigible.ai/workflows/${workflowId}`
 `https://dirigible.ai/interactions/${interactionId}`
 ```
-and retrieve them later using the data retrieval API, as specified below.
+
+and retrieve them later using the data retrieval API.
 
 ## Data retrieval
 

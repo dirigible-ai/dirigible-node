@@ -4,7 +4,7 @@ import { DecoratorInput, LLMInteraction, LLMProvider } from './types';
 import { shouldLog, getConfig } from './config';
 import { logInteraction } from './api/client';
 import { getGlobalMetadata, addGlobalMetadata, removeGlobalMetadata, getCurrentWorkflow } from './workflow';
-import { generateInteractionId } from './interaction-ids';
+import { generateInteractionId } from './elements-ids';
 import * as logger from './logger';
 
 /**

@@ -247,6 +247,19 @@ export interface InteractionFilter {
 }
 
 /**
+ * Artifact filter options
+ */
+export interface ArtifactFilter {
+  environment?: string;
+  name?: string;
+  type?: string;
+  startDate?: string;
+  endDate?: string;
+  workflowId?: string;
+  metadata?: string | Record<string, any>; // Accept both string and object
+}
+
+/**
  * Workflow filter options (camelCase)
  */
 export interface WorkflowFilter {

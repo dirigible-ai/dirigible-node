@@ -24,8 +24,8 @@ export { ObservabilityConfig, LLMInteraction, DecoratorInput } from './types';
 // Decorator exports
 export { logLLMInteraction } from './decorator';
 
-// Interaction ID and workflow ID management
-export { getInteractionId, getWorkflowId, generateInteractionId } from './interaction-ids';
+// Interaction and artifact ID exports
+export { getInteractionId, getWorkflowId, generateInteractionId, generateArtifactId, getArtifactId, getCurrentWorkflowArtifactId } from './elements-ids';
 
 // Workflow, metadata and artifact exports
 export {
@@ -60,6 +60,7 @@ export {
   getWorkflowInteractions,
   getWorkflowArtifacts,
   getArtifact,
+  getArtifacts,
   searchInteractions,
   searchWorkflows
 } from './api/data-retrieval';

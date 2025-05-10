@@ -10,8 +10,11 @@ import { observeLLM as _observeLLM, logLLMInteraction } from './decorator';
 import { 
   getInteractionId, 
   getWorkflowId, 
-  generateInteractionId 
-} from './interaction-ids';
+  generateInteractionId,
+  generateArtifactId,
+  getArtifactId,
+  getCurrentWorkflowArtifactId
+} from './elements-ids';
 import {
   setGlobalMetadata,
   addGlobalMetadata,
@@ -36,6 +39,7 @@ import {
   getWorkflowInteractions,
   getWorkflowArtifacts,
   getArtifact,
+  getArtifacts,
   searchInteractions,
   searchWorkflows
 } from './api/data-retrieval';
@@ -161,6 +165,24 @@ export class Dirigible {
    * @returns The workflow context
    */
   static saveArtifact = saveArtifact;
+
+  /**
+   * Generate a unique artifact ID
+   * @returns A unique string identifier for an artifact
+   */
+  static generateArtifactId = generateArtifactId;
+
+  /**
+   * Get the ID of the most recent artifact
+   * @returns The most recent artifact ID or null if none exists
+   */
+  static getArtifactId = getArtifactId;
+
+  /**
+   * Get the ID of the current workflow's most recent artifact
+   * @returns The current workflow's most recent artifact ID or null if none exists
+   */
+  static getCurrentWorkflowArtifactId = getCurrentWorkflowArtifactId;
   
   // ID management
 
@@ -257,6 +279,13 @@ export class Dirigible {
    * @returns The artifact
    */
   static getArtifact = getArtifact;
+
+  /**
+   * Get multiple artifacts with optional filtering
+   * @param options Filter and pagination options
+   * @returns Paginated artifacts with cursor for next page
+   */
+  static getArtifacts = getArtifacts;
 
   /**
    * Search for interactions matching a query

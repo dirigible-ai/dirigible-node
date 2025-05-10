@@ -7,6 +7,7 @@ import {
   AIWorkflow, 
   Artifact, 
   InteractionFilter, 
+  ArtifactFilter,
   WorkflowFilter,
   ApiResponse,
   ApiCollectionResponse,
@@ -755,6 +756,79 @@ export async function getArtifact(
     return processApiResponse<Artifact>(data) as ArtifactResponseWithExports;
   } catch (error) {
     logger.error('Error in getArtifact:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get multiple artifacts with optional filtering
+ * @param options Filter and pagination options
+ * @returns Paginated artifacts with cursor for next page
+ */
+export async function getArtifacts(options: {
+  filters?: ArtifactFilter,
+  limit?: number,
+  cursor?: string,
+  includeMarkdown?: boolean,
+  includeJson?: boolean
+} = {}): Promise<ArtifactsCollectionWithExports> {
+  const config = getConfig();
+  const { filters = {}, limit = 50, cursor, includeMarkdown, includeJson } = options;
+  
+  try {
+    logger.debug(`Fetching artifacts with filters: ${JSON.stringify(filters)}`);
+    
+    // Build query parameters
+    const queryParams = new URLSearchParams();
+    
+    // Add project ID (required)
+    queryParams.append('projectId', config.projectId || 'default');
+    
+    // Add pagination parameters
+    queryParams.append('limit', String(limit));
+    
+    // Calculate offset from cursor if provided
+    const offset = cursor ? parseInt(atob(cursor), 10) : 0;
+    queryParams.append('offset', String(offset));
+    
+    // Add individual filter parameters directly
+    if (filters.environment) queryParams.append('environment', filters.environment);
+    if (filters.name) queryParams.append('name', filters.name);
+    if (filters.type) queryParams.append('type', filters.type);
+    if (filters.startDate) queryParams.append('startDate', filters.startDate);
+    if (filters.endDate) queryParams.append('endDate', filters.endDate);
+    if (filters.workflowId) queryParams.append('workflowId', filters.workflowId);
+    
+    // Handle metadata - automatically JSON stringify if it's an object
+    if (filters.metadata) {
+      const metadataStr = typeof filters.metadata === 'string' 
+        ? filters.metadata 
+        : JSON.stringify(filters.metadata);
+      queryParams.append('metadata', metadataStr);
+    }
+    
+    // Add export format options
+    if (includeMarkdown) queryParams.append('includeMarkdown', 'true');
+    if (includeJson) queryParams.append('includeJson', 'true');
+    
+    const response = await fetch(`${config.apiUrl}/data/artifacts?${queryParams.toString()}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': config.apiKey
+      }
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      logger.error(`Error fetching artifacts: ${response.status} ${errorText}`);
+      throw new Error(`Failed to fetch artifacts: ${response.status} ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    return processCollectionResponse<Artifact>(data) as ArtifactsCollectionWithExports;
+  } catch (error) {
+    logger.error('Error in getArtifacts:', error);
     throw error;
   }
 }

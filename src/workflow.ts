@@ -1,6 +1,7 @@
 // Workflow management
 
 import * as logger from './logger';
+import { generateArtifactId } from './elements-ids';
 
 /**
  * Global metadata that will be attached to all requests
@@ -212,16 +213,30 @@ export function saveArtifact(
   try {
     const workflow = getCurrentWorkflow();
     
-    // Create artifact data
+    // Generate a client-side artifact ID
+    const artifactId = generateArtifactId();
+    
+    // Get workflow metadata
+    const workflowMetadata = workflow.getMetadata();
+    
+    // Get global metadata
+    const globalMetadata = getGlobalMetadata();
+    
+    // Create artifact data - merge metadata with priority: artifact > workflow > global
     const artifactData = {
+      artifact_id: artifactId,
       name,
       value,
       type: options?.type || 'default',
       timestamp: new Date().toISOString(),
-      metadata: options?.metadata || {}
+      metadata: {
+        ...globalMetadata,
+        ...workflowMetadata,
+        ...(options?.metadata || {})
+      }
     };
     
-    // Store artifacts in a private property on the workflow object
+    // Store artifacts in workflow
     if (!workflow._artifacts) {
       workflow._artifacts = [artifactData];
     } else {
@@ -234,7 +249,7 @@ export function saveArtifact(
       }
     }
     
-    logger.debug(`Logged artifact "${name}" to workflow ${workflow.id}`);
+    logger.debug(`Logged artifact "${name}" with ID ${artifactId} to workflow ${workflow.id}`);
     return workflow;
   } catch (error) {
     logger.error(`Error logging artifact "${name}":`, error);
