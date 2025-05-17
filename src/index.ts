@@ -62,5 +62,6 @@ export {
   getArtifact,
   getArtifacts,
   searchInteractions,
-  searchWorkflows
+  searchWorkflows,
+  searchArtifacts
 } from './api/data-retrieval';

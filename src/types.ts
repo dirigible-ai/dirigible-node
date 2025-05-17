@@ -151,6 +151,11 @@ export interface LLMInteraction {
   metadata?: Record<string, any>;
   
   /**
+   * Optional labels for categorizing and filtering
+   */
+  labels?: Record<string, any>;
+  
+  /**
    * Optional Markdown formatted version of the interaction
    */
   markdown?: string;
@@ -190,6 +195,7 @@ export interface AIWorkflow {
   startedAt: string;
   lastUpdated: string;
   metadata: Record<string, any>;
+  labels?: Record<string, any>;
   totalInteractions: number;
   errorCount: number;
   totalTokens: number;
@@ -209,6 +215,7 @@ export interface Artifact {
   type: string;
   value: any;
   metadata: Record<string, any>;
+  labels?: Record<string, any>;
   timestamp: string;
   createdAt: string;
   
@@ -243,6 +250,8 @@ export interface InteractionFilter {
   endDate?: string;
   interactionId?: string;
   metadata?: string | Record<string, any>; // Accept both string and object
+  labels?: string | Record<string, any>; // Accept both string and object
+  datasetId?: string;
   toolName?: string;
 }
 
@@ -257,6 +266,8 @@ export interface ArtifactFilter {
   endDate?: string;
   workflowId?: string;
   metadata?: string | Record<string, any>; // Accept both string and object
+  labels?: string | Record<string, any>; // Accept both string and object
+  datasetId?: string;
 }
 
 /**
@@ -268,6 +279,8 @@ export interface WorkflowFilter {
   startDate?: string;
   endDate?: string;
   metadata?: string | Record<string, any>; // Accept both string and object
+  labels?: string | Record<string, any>; // Accept both string and object
+  datasetId?: string;
   status?: string; // Support status:error filtering
 }
 

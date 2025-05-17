@@ -41,7 +41,8 @@ import {
   getArtifact,
   getArtifacts,
   searchInteractions,
-  searchWorkflows
+  searchWorkflows,
+  searchArtifacts
 } from './api/data-retrieval';
 
 /**
@@ -301,6 +302,13 @@ export class Dirigible {
    */
   static searchWorkflows = searchWorkflows;
   
+ /**
+   * Search for artifacts matching a query
+   * @param options Search options including query string, filters, and pagination
+   * @returns Paginated search results with cursor for next page
+   */
+  static searchArtifacts = searchArtifacts;
+
   // Special client wrappers - also exported directly from index.ts
   
   /**

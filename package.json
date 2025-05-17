@@ -1,7 +1,7 @@
 {
   "name": "@dirigible-ai/sdk",
-  "version": "0.6.0",
-  "description": "Lightweight SDK for monitoring AI and LLM workflows.",
+  "version": "0.6.1",
+  "description": "Lightweight SDK for monitoring and improving AI workflows.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {

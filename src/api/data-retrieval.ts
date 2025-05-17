@@ -359,6 +359,19 @@ export async function getInteractions(options: {
       queryParams.append('metadata', metadataStr);
     }
     
+    // Handle labels - automatically JSON stringify if it's an object
+    if (filters.labels) {
+      const labelsStr = typeof filters.labels === 'string'
+        ? filters.labels
+        : JSON.stringify(filters.labels);
+      queryParams.append('labels', labelsStr);
+    }
+    
+    // Add dataset filter if present
+    if (filters.datasetId) {
+      queryParams.append('datasetId', filters.datasetId);
+    }
+    
     // Add export format options
     if (includeMarkdown) queryParams.append('includeMarkdown', 'true');
     if (includeJson) queryParams.append('includeJson', 'true');
@@ -526,6 +539,7 @@ export async function getWorkflows(options: {
     if (filters.workflowType) queryParams.append('workflowType', filters.workflowType);
     if (filters.startDate) queryParams.append('startDate', filters.startDate);
     if (filters.endDate) queryParams.append('endDate', filters.endDate);
+    if (filters.status) queryParams.append('status', filters.status);
     
     // Handle metadata - automatically JSON stringify if it's an object
     if (filters.metadata) {
@@ -533,6 +547,19 @@ export async function getWorkflows(options: {
         ? filters.metadata 
         : JSON.stringify(filters.metadata);
       queryParams.append('metadata', metadataStr);
+    }
+    
+    // Handle labels - automatically JSON stringify if it's an object
+    if (filters.labels) {
+      const labelsStr = typeof filters.labels === 'string'
+        ? filters.labels
+        : JSON.stringify(filters.labels);
+      queryParams.append('labels', labelsStr);
+    }
+    
+    // Add dataset filter if present
+    if (filters.datasetId) {
+      queryParams.append('datasetId', filters.datasetId);
     }
     
     const response = await fetch(`${config.apiUrl}/data/workflows?${queryParams.toString()}`, {
@@ -807,6 +834,19 @@ export async function getArtifacts(options: {
       queryParams.append('metadata', metadataStr);
     }
     
+    // Handle labels - automatically JSON stringify if it's an object
+    if (filters.labels) {
+      const labelsStr = typeof filters.labels === 'string'
+        ? filters.labels
+        : JSON.stringify(filters.labels);
+      queryParams.append('labels', labelsStr);
+    }
+    
+    // Add dataset filter if present
+    if (filters.datasetId) {
+      queryParams.append('datasetId', filters.datasetId);
+    }
+    
     // Add export format options
     if (includeMarkdown) queryParams.append('includeMarkdown', 'true');
     if (includeJson) queryParams.append('includeJson', 'true');
@@ -829,6 +869,75 @@ export async function getArtifacts(options: {
     return processCollectionResponse<Artifact>(data) as ArtifactsCollectionWithExports;
   } catch (error) {
     logger.error('Error in getArtifacts:', error);
+    throw error;
+  }
+}
+
+/**
+ * Search for artifacts matching a query
+ * @param options Search options including query string, filters, and pagination
+ * @returns Paginated search results with cursor for next page
+ */
+export async function searchArtifacts(options: {
+  query: string,
+  filters?: ArtifactFilter,
+  limit?: number,
+  cursor?: string,
+  includeMarkdown?: boolean,
+  includeJson?: boolean
+} = { query: '' }): Promise<ArtifactsCollectionWithExports> {
+  const config = getConfig();
+  const { query, filters = {}, limit = 50, cursor, includeMarkdown, includeJson } = options;
+  
+  try {
+    logger.debug(`Searching artifacts with query: "${query}"`);
+    
+    // Build query parameters
+    const queryParams = new URLSearchParams();
+    
+    // Add project ID (required)
+    queryParams.append('projectId', config.projectId || 'default');
+    
+    // Add search query
+    queryParams.append('query', query);
+    
+    // Add pagination parameters - ensure limit is passed as a string
+    queryParams.append('limit', String(limit));
+    
+    // Add offset from cursor if provided
+    const offset = cursor ? parseInt(atob(cursor), 10) : 0;
+    queryParams.append('offset', String(offset));
+    
+    // Convert camelCase filter keys to snake_case for API
+    const apiFilters = transformCamelToSnakeCase(filters);
+    
+    // Add filter parameters as JSON
+    if (Object.keys(apiFilters).length > 0) {
+      queryParams.append('filters', JSON.stringify(apiFilters));
+    }
+    
+    // Add export format options
+    if (includeMarkdown) queryParams.append('includeMarkdown', 'true');
+    if (includeJson) queryParams.append('includeJson', 'true');
+      
+    const response = await fetch(`${config.apiUrl}/data/search/artifacts?${queryParams.toString()}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': config.apiKey
+      }
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      logger.error(`Error searching artifacts: ${response.status} ${errorText}`);
+      throw new Error(`Failed to search artifacts: ${response.status} ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    return processCollectionResponse<Artifact>(data) as ArtifactsCollectionWithExports;
+  } catch (error) {
+    logger.error('Error in searchArtifacts:', error);
     throw error;
   }
 }
